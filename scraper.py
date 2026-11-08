@@ -106,6 +106,33 @@ def baixar(url):
     return None, ultimo_erro
 
 
+def diagnostico(produto, html):
+    """Mostra no log o que o robô enxergou. Só roda com DEBUG=1 (execução manual)."""
+    soup = BeautifulSoup(html, "html.parser")
+    texto = soup.get_text(" ", strip=True)
+    print(f"\n===== DIAGNÓSTICO: {produto['id']} =====")
+    for chave in ("property", "name"):
+        meta = soup.find("meta", attrs={chave: "product:price:amount"})
+        if meta:
+            print(f"meta product:price:amount = {meta.get('content')}")
+            break
+    else:
+        print("meta product:price:amount: NÃO ENCONTRADA")
+    print("Parcelamentos encontrados no texto:")
+    for m in re.finditer(r"\d+\s*x\s*de\s*R\$\s*" + PRECO + r"[^.]{0,20}", texto, re.I):
+        print("  -", m.group(0).strip())
+    print("Primeiros valores 'R$' encontrados (com contexto):")
+    for m in list(re.finditer(r"R\$\s*" + PRECO, texto))[:12]:
+        ini = max(0, m.start() - 30)
+        print("  -", texto[ini : m.end() + 25].replace("\n", " "))
+    try:
+        pais = requests.get("https://ipinfo.io/country", timeout=15).text.strip()
+        print(f"País de onde o robô está acessando: {pais}")
+    except requests.RequestException:
+        print("País de onde o robô está acessando: não consegui descobrir")
+    print("=====\n")
+
+
 def coletar(produto):
     agora = datetime.now(FUSO).isoformat(timespec="minutes")
     extrator = EXTRATORES.get(produto["loja"].lower())
@@ -115,6 +142,9 @@ def coletar(produto):
     html, erro = baixar(produto["url"])
     if erro:
         return {"data": agora, "erro": erro}
+
+    if os.environ.get("DEBUG") == "1":
+        diagnostico(produto, html)
 
     dados = extrator(html)
     if not dados.get("preco_atual"):
