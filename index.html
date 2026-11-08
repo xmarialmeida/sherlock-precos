@@ -162,7 +162,7 @@ function sv(tag, attrs = {}) {
   return n;
 }
 
-const slug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const slug = (t) => t.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const chaveOferta = (prod, o) => o.id || `${prod.id}@${slug(o.loja)}`;
 const melhor = (r) => Math.min(...[r.preco_atual, r.preco_pix].filter(Boolean));
 const validos = (h) => h.filter((r) => !r.erro && !r.suspeita && r.preco_atual);
