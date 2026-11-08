@@ -23,6 +23,14 @@
    "parcelas_sem_juros": 10,
    "valor_parcela": 436.8,
    "total_parcelado": 4368.0
+  },
+  {
+   "data": "2026-11-07T23:56-03:00",
+   "preco_atual": 4368.0,
+   "preco_original": 6198.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 436.8,
+   "total_parcelado": 4368.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -46,6 +54,15 @@
   },
   {
    "data": "2026-11-07T23:34-03:00",
+   "preco_atual": 1868.65,
+   "preco_original": 2971.0,
+   "preco_pix": 1868.65,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 196.7,
+   "total_parcelado": 1967.0
+  },
+  {
+   "data": "2026-11-07T23:56-03:00",
    "preco_atual": 1868.65,
    "preco_original": 2971.0,
    "preco_pix": 1868.65,
