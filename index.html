@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rastreador de preços</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page: #f4f4f1;
+    --surface: #fcfcfb;
+    --border: #e3e2dc;
+    --chip: #efeee9;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --text-3: #6b6a64;
+    --grid: #e8e7e1;
+    --series-1: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #121211;
+      --surface: #1a1a19;
+      --border: #2e2d2a;
+      --chip: #262522;
+      --text: #f0efec;
+      --text-2: #c3c2b7;
+      --text-3: #908f86;
+      --grid: #2a2926;
+      --series-1: #3987e5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { margin: 0 0 4px; font-size: 1.5rem; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--text-2); font-size: 0.9rem; }
+  .banner {
+    margin-top: 12px; padding: 10px 14px; border-radius: 10px;
+    background: var(--chip); border: 1px solid var(--border);
+    font-size: 0.875rem; color: var(--text-2);
+  }
+  .grid { display: grid; gap: 16px; margin-top: 20px; grid-template-columns: 1fr; }
+  @media (min-width: 880px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; min-width: 0;
+  }
+  .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .card h2 { margin: 0; font-size: 1rem; line-height: 1.3; }
+  .store { color: var(--text-3); font-size: 0.8rem; margin-top: 2px; }
+  a.btn {
+    flex: none; font-size: 0.8rem; color: var(--series-1); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; white-space: nowrap;
+  }
+  a.btn:hover, a.btn:focus-visible { border-color: var(--series-1); outline: none; }
+  .chip {
+    display: inline-block; margin-top: 12px; padding: 4px 10px; border-radius: 999px;
+    background: var(--chip); border: 1px solid var(--border);
+    font-size: 0.8rem; color: var(--text);
+  }
+  .price-label { margin-top: 14px; color: var(--text-3); font-size: 0.8rem; }
+  .price { font-size: 2rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; }
+  .delta { font-size: 0.85rem; color: var(--text-2); }
+  dl.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 16px 0 0; }
+  dl.facts div { min-width: 0; }
+  dt { color: var(--text-3); font-size: 0.75rem; }
+  dd { margin: 0; font-size: 0.9rem; font-weight: 550; overflow-wrap: anywhere; }
+  dd small { display: block; color: var(--text-2); font-weight: 400; font-size: 0.78rem; }
+  .insight {
+    margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 0.85rem;
+    background: var(--chip); color: var(--text-2);
+  }
+  .chart-wrap { position: relative; margin-top: 16px; }
+  .chart-title { font-size: 0.8rem; color: var(--text-3); margin-bottom: 4px; }
+  svg.chart { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  svg.chart:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 6px; }
+  .tip {
+    position: absolute; pointer-events: none; z-index: 2; min-width: 150px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 10px; font-size: 0.78rem; color: var(--text-2);
+    box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none;
+  }
+  .tip strong { display: block; color: var(--text); font-size: 1rem; }
+  .tip .line-key { display: inline-block; width: 12px; height: 0; border-top: 2px solid var(--series-1); margin-right: 6px; vertical-align: middle; }
+  .empty { color: var(--text-2); font-size: 0.85rem; padding: 18px 0; }
+  button.toggle {
+    margin-top: 10px; background: none; border: 0; padding: 4px 0; cursor: pointer;
+    color: var(--series-1); font: inherit; font-size: 0.82rem;
+  }
+  button.toggle:focus-visible { outline: 2px solid var(--series-1); border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-3); font-weight: 500; }
+  .tablebox { max-height: 260px; overflow: auto; }
+  .note { margin-top: 10px; font-size: 0.75rem; color: var(--text-3); }
+  footer { margin-top: 28px; font-size: 0.8rem; color: var(--text-3); }
+  footer p { margin: 6px 0; }
+  .state { margin-top: 28px; padding: 22px; border: 1px dashed var(--border); border-radius: 14px; color: var(--text-2); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Rastreador de preços</h1>
+    <p id="subtitle">Carregando…</p>
+    <div id="demo-banner" class="banner" hidden>Você está vendo <strong>dados de demonstração</strong>. Remova <code>?demo</code> do endereço para ver os dados reais.</div>
+  </header>
+  <div id="app" class="grid" aria-live="polite"></div>
+  <footer>
+    <p><strong>Preço de referência:</strong> é o que o robô enxerga ao acessar a loja, de um servidor fora do Brasil. Em alguns produtos, o valor no seu CEP pode ser ligeiramente diferente. Use “Conferir na loja” antes de comprar.</p>
+    <p><strong>Como o veredito é calculado:</strong> comparamos o menor valor à vista de hoje (Pix, quando existe) com o menor valor já registrado por este rastreador. Com poucos dias de histórico, ele ainda é fraco; por isso mostramos sempre quantos dias e leituras ele considera.</p>
+  </footer>
+</main>
+
+<script>
+"use strict";
+
+// ====== CONFIGURAÇÃO ======
+const CONFIG = { usuario: "xmarialmeida", repo: "rastreador-precos", branch: "main" };
+const MIN_LEITURAS_VEREDITO = 6;        // ~3 dias com 2 coletas por dia
+const RAW = `https://raw.githubusercontent.com/${CONFIG.usuario}/${CONFIG.repo}/${CONFIG.branch}/`;
+const DEMO = new URLSearchParams(location.search).has("demo");
+
+// ====== UTILITÁRIOS ======
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const brl0 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const fmtData = (iso) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+const fmtDataHora = (iso) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+const SVGNS = "http://www.w3.org/2000/svg";
+
+function el(tag, props = {}, ...filhos) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  for (const f of filhos) if (f) n.append(f);
+  return n;
+}
+function sv(tag, attrs = {}) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  return n;
+}
+
+const melhor = (r) => Math.min(...[r.preco_atual, r.preco_pix].filter(Boolean));
+const validos = (h) => h.filter((r) => !r.erro && r.preco_atual);
+
+// ====== DADOS ======
+async function buscarJSON(urls) {
+  let ultimo;
+  for (const u of urls) {
+    try {
+      const r = await fetch(u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+      if (r.ok) return await r.json();
+      ultimo = new Error("HTTP " + r.status);
+    } catch (e) { ultimo = e; }
+  }
+  throw ultimo;
+}
+
+function dadosDemo() {
+  let s = 12345;
+  const rnd = () => { s |= 0; s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const produtos = [
+    { id: "geladeira-demo", nome: "Geladeira Inteligente B.Smart Brastemp 500L Inox", loja: "Brastemp", url: "#" },
+    { id: "fogao-demo", nome: "Fogão Brastemp 4 bocas de embutir Inox", loja: "Brastemp", url: "#" },
+  ];
+  const hist = {};
+  const fim = Date.now();
+  const mk = (base, passoMax, comPix, original, alvoFinal) => {
+    const out = []; let p = base;
+    for (let i = 0; i < 60; i++) {
+      p = Math.max(base * 0.93, Math.min(base * 1.08, p + (rnd() - 0.5) * passoMax));
+      if (i === 59) p = alvoFinal;
+      p = Math.round(p);
+      const t = new Date(fim - (59 - i) * 12 * 3600 * 1000).toISOString();
+      const r = { data: t, preco_atual: p, preco_original: original, parcelas_sem_juros: 10 };
+      r.valor_parcela = comPix ? Math.round(p * 1.053) / 10 : p / 10;
+      r.total_parcelado = Math.round(r.valor_parcela * 10 * 100) / 100;
+      if (comPix) r.preco_pix = p;
+      out.push(r);
+    }
+    return out;
+  };
+  hist["geladeira-demo"] = mk(4400, 90, false, 6198, 4290);
+  hist["fogao-demo"] = mk(1900, 40, true, 2971, 1905);
+  return { produtos, hist };
+}
+
+// ====== VEREDITO ======
+function veredito(vals) {
+  const n = vals.length;
+  const dias = Math.max(1, Math.round((new Date(vals[n - 1].data) - new Date(vals[0].data)) / 86400000));
+  const base = `${n} leituras em ${dias} ${dias === 1 ? "dia" : "dias"}`;
+  if (n < MIN_LEITURAS_VEREDITO) return { rotulo: `⏳ Coletando histórico (${n} de ${MIN_LEITURAS_VEREDITO} leituras)`, base };
+  const atual = melhor(vals[n - 1]);
+  const minimo = Math.min(...vals.map(melhor));
+  if (atual <= minimo) return { rotulo: "🏆 Menor valor registrado até agora", base };
+  const pct = ((atual - minimo) / minimo) * 100;
+  const txt = pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+  if (pct <= 3) return { rotulo: `✅ Perto do mínimo (+${txt}%)`, base };
+  return { rotulo: `↗ ${txt}% acima do menor valor registrado`, base };
+}
+
+// ====== GRÁFICO ======
+function desenharGrafico(wrap, vals) {
+  wrap.replaceChildren();
+  const W = Math.max(280, wrap.clientWidth || 360), H = 200;
+  const m = { l: 62, r: 14, t: 10, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const pontos = vals.map((r) => ({ t: new Date(r.data).getTime(), v: melhor(r), r }));
+  const vmin = Math.min(...pontos.map((p) => p.v)), vmax = Math.max(...pontos.map((p) => p.v));
+  const pad = vmax === vmin ? vmin * 0.02 : (vmax - vmin) * 0.18;
+  const passo = vmax - vmin > 400 ? 100 : vmax - vmin > 80 ? 50 : 10;
+  const lo = Math.floor((vmin - pad) / passo) * passo, hi = Math.ceil((vmax + pad) / passo) * passo;
+  const t0 = pontos[0].t, t1 = pontos[pontos.length - 1].t;
+  const X = (t) => (t1 === t0 ? m.l + iw / 2 : m.l + ((t - t0) / (t1 - t0)) * iw);
+  const Y = (v) => m.t + ih - ((v - lo) / (hi - lo)) * ih;
+
+  const svg = sv("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img", tabindex: "0",
+    "aria-label": `Histórico de preço: ${pontos.length} leituras, de ${brl.format(pontos[0].v)} a ${brl.format(pontos[pontos.length - 1].v)}. Use as setas para percorrer.` });
+
+  // grade e eixo Y
+  for (const v of [lo, (lo + hi) / 2, hi]) {
+    svg.append(sv("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "var(--grid)", "stroke-width": 1 }));
+    const tx = sv("text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--text-3)" });
+    tx.textContent = brl0.format(v); svg.append(tx);
+  }
+  // eixo X (início, meio, fim)
+  const marcas = pontos.length >= 3 && t1 - t0 > 86400000 ? [t0, (t0 + t1) / 2, t1] : [t0, t1];
+  marcas.forEach((t, i) => {
+    if (i === 1 && marcas.length === 2 && t1 === t0) return;
+    const tx = sv("text", { x: X(t), y: H - 6, "text-anchor": i === 0 ? "start" : i === marcas.length - 1 ? "end" : "middle", "font-size": 11, fill: "var(--text-3)" });
+    tx.textContent = fmtData(new Date(t).toISOString()); svg.append(tx);
+  });
+  // linha do menor valor
+  if (pontos.length >= 2 && vmax > vmin) {
+    svg.append(sv("line", { x1: m.l, x2: W - m.r, y1: Y(vmin), y2: Y(vmin), stroke: "var(--text-3)", "stroke-width": 1, "stroke-dasharray": "4 4" }));
+    const tx = sv("text", { x: W - m.r, y: Y(vmin) - 5, "text-anchor": "end", "font-size": 11, fill: "var(--text-2)" });
+    tx.textContent = `mínimo ${brl.format(vmin)}`; svg.append(tx);
+  }
+  // série
+  if (pontos.length >= 2) {
+    svg.append(sv("polyline", { points: pontos.map((p) => `${X(p.t)},${Y(p.v)}`).join(" "), fill: "none", stroke: "var(--series-1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  }
+  const ult = pontos[pontos.length - 1];
+  svg.append(sv("circle", { cx: X(ult.t), cy: Y(ult.v), r: 4.5, fill: "var(--series-1)", stroke: "var(--surface)", "stroke-width": 2 }));
+
+  // interação
+  const cross = sv("line", { y1: m.t, y2: m.t + ih, stroke: "var(--text-3)", "stroke-width": 1, visibility: "hidden" });
+  const dot = sv("circle", { r: 5, fill: "var(--series-1)", stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" });
+  const hit = sv("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
+  svg.append(cross, dot, hit);
+
+  const tip = el("div", { class: "tip", role: "status" });
+  wrap.append(svg, tip);
+
+  function mostrar(i) {
+    const p = pontos[i], x = X(p.t), y = Y(p.v);
+    cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
+    dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("visibility", "visible");
+    tip.replaceChildren(
+      el("span", { text: fmtDataHora(p.r.data) }),
+      el("strong", { text: brl.format(p.v) }),
+      el("span", {}, el("span", { class: "line-key" }), document.createTextNode(p.r.preco_pix && p.r.preco_pix < p.r.preco_atual ? "Pix (menor valor à vista)" : "Preço à vista")),
+      p.r.parcelas_sem_juros ? el("div", { text: `${p.r.parcelas_sem_juros}x de ${brl.format(p.r.valor_parcela)} sem juros` }) : null
+    );
+    tip.style.display = "block";
+    const escala = svg.getBoundingClientRect().width / W;
+    const largura = tip.offsetWidth;
+    let left = x * escala + 12;
+    if (left + largura > wrap.clientWidth) left = x * escala - largura - 12;
+    tip.style.left = Math.max(0, left) + "px";
+    tip.style.top = Math.max(0, y * escala - 20) + "px";
+    svg.dataset.i = i;
+  }
+  function esconder() { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); tip.style.display = "none"; }
+  const maisProximo = (ev) => {
+    const r = svg.getBoundingClientRect(), xs = ((ev.clientX - r.left) / r.width) * W;
+    let b = 0, d = Infinity;
+    pontos.forEach((p, i) => { const dd = Math.abs(X(p.t) - xs); if (dd < d) { d = dd; b = i; } });
+    return b;
+  };
+  hit.addEventListener("pointermove", (ev) => mostrar(maisProximo(ev)));
+  hit.addEventListener("pointerdown", (ev) => mostrar(maisProximo(ev)));
+  hit.addEventListener("pointerleave", esconder);
+  svg.addEventListener("keydown", (ev) => {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    ev.preventDefault();
+    const i = Number(svg.dataset.i ?? pontos.length - 1) + (ev.key === "ArrowRight" ? 1 : -1);
+    mostrar(Math.min(pontos.length - 1, Math.max(0, i)));
+  });
+  svg.addEventListener("blur", esconder);
+}
+
+// ====== CARD ======
+function fato(rotulo, valor, sub) {
+  return el("div", {}, el("dt", { text: rotulo }), el("dd", {}, document.createTextNode(valor), sub ? el("small", { text: sub }) : null));
+}
+
+function montarCard(prod, hist) {
+  const vals = validos(hist);
+  const falhas = hist.length - vals.length;
+  const card = el("article", { class: "card" });
+  card.append(el("div", { class: "card-head" },
+    el("div", {}, el("h2", { text: prod.nome }), el("div", { class: "store", text: prod.loja })),
+    el("a", { class: "btn", href: prod.url, target: "_blank", rel: "noopener", text: "Conferir na loja ↗" })));
+
+  if (!vals.length) {
+    card.append(el("p", { class: "empty", text: "Ainda não há nenhuma leitura válida para este produto." + (falhas ? ` (${falhas} tentativa(s) com falha.)` : "") }));
+    return card;
+  }
+
+  const ult = vals[vals.length - 1], ant = vals[vals.length - 2];
+  const v = veredito(vals);
+  const atual = melhor(ult);
+  card.append(el("span", { class: "chip", text: v.rotulo }));
+  card.append(el("div", { class: "price-label", text: "Preço de referência (menor valor à vista)" }));
+  card.append(el("div", { class: "price", text: brl.format(atual) }));
+  if (ant) {
+    const d = atual - melhor(ant);
+    const txt = d === 0 ? "• sem mudança desde a leitura anterior" : `${d < 0 ? "▼ caiu" : "▲ subiu"} ${brl.format(Math.abs(d))} desde a leitura anterior`;
+    card.append(el("div", { class: "delta", text: txt }));
+  }
+
+  const todos = vals.map(melhor);
+  const minimo = Math.min(...todos), maximo = Math.max(...todos), media = todos.reduce((a, b) => a + b, 0) / todos.length;
+  const facts = el("dl", { class: "facts" });
+  facts.append(fato("À vista / Pix", ult.preco_pix ? brl.format(ult.preco_pix) : "Sem desconto à vista", ult.preco_pix ? "no Pix" : "a loja não informa preço menor à vista"));
+  facts.append(fato("Parcelado", ult.parcelas_sem_juros ? `${ult.parcelas_sem_juros}x de ${brl.format(ult.valor_parcela)}` : "—", ult.parcelas_sem_juros ? `sem juros · total ${brl.format(ult.total_parcelado)}` : "não encontrado"));
+  facts.append(fato("Preço “de” anunciado", ult.preco_original ? brl.format(ult.preco_original) : "—", ult.preco_original ? `desconto anunciado: ${Math.round((1 - ult.preco_atual / ult.preco_original) * 100)}%` : null));
+  facts.append(fato("Faixa registrada", `${brl0.format(minimo)} – ${brl0.format(maximo)}`, `média ${brl0.format(media)}`));
+  card.append(facts);
+
+  if (ult.total_parcelado) {
+    const extra = ult.total_parcelado - atual;
+    card.append(el("p", { class: "insight", text: extra > 0.5 ? `Parcelar custa ${brl.format(extra)} a mais do que pagar à vista.` : "Parcelar sem juros não custa a mais do que pagar à vista." }));
+  }
+
+  card.append(el("div", { class: "chart-title", style: "margin-top:16px", text: `Histórico do menor valor à vista · ${v.base}` }));
+  const wrap = el("div", { class: "chart-wrap" });
+  card.append(wrap);
+  if (vals.length < 2) card.append(el("p", { class: "note", text: "O gráfico ganha forma a partir da 2ª leitura." }));
+  requestAnimationFrame(() => desenharGrafico(wrap, vals));
+  let larg = 0;
+  new ResizeObserver(() => { if (wrap.clientWidth !== larg) { larg = wrap.clientWidth; desenharGrafico(wrap, vals); } }).observe(wrap);
+
+  // visão em tabela
+  const caixa = el("div", { class: "tablebox", hidden: "" });
+  const tab = el("table");
+  tab.append(el("thead", {}, el("tr", {}, ...["Data", "Preço", "Pix", "Parcelado"].map((t) => el("th", { text: t })))));
+  const corpo = el("tbody");
+  for (const r of vals.slice(-40).reverse()) {
+    corpo.append(el("tr", {}, el("td", { text: fmtDataHora(r.data) }), el("td", { text: brl.format(r.preco_atual) }), el("td", { text: r.preco_pix ? brl.format(r.preco_pix) : "—" }), el("td", { text: r.parcelas_sem_juros ? `${r.parcelas_sem_juros}x ${brl.format(r.valor_parcela)}` : "—" })));
+  }
+  tab.append(corpo); caixa.append(tab);
+  const btn = el("button", { class: "toggle", type: "button", "aria-expanded": "false", text: "Ver tabela de leituras" });
+  btn.addEventListener("click", () => {
+    const abrir = caixa.hidden;
+    caixa.hidden = !abrir;
+    btn.setAttribute("aria-expanded", String(abrir));
+    btn.textContent = abrir ? "Ocultar tabela de leituras" : "Ver tabela de leituras";
+  });
+  card.append(btn, caixa);
+  if (falhas) card.append(el("p", { class: "note", text: `${falhas} tentativa(s) de leitura falharam e não entram nas contas.` }));
+  return card;
+}
+
+// ====== INÍCIO ======
+async function iniciar() {
+  const app = document.getElementById("app");
+  const sub = document.getElementById("subtitle");
+  let produtos, hist;
+  try {
+    if (DEMO) {
+      document.getElementById("demo-banner").hidden = false;
+      ({ produtos, hist } = dadosDemo());
+    } else {
+      produtos = await buscarJSON(["products.json", RAW + "products.json"]);
+      try { hist = await buscarJSON([RAW + "data/history.json", "data/history.json"]); }
+      catch { hist = {}; }
+    }
+  } catch (e) {
+    sub.textContent = "Não foi possível carregar os dados.";
+    app.className = "";
+    app.append(el("div", { class: "state", text: "Não consegui ler a lista de produtos. Se você abriu este arquivo direto do computador, o navegador bloqueia a leitura: abra pelo endereço do GitHub Pages ou use ?demo para ver um exemplo." }));
+    return;
+  }
+
+  if (!Object.keys(hist).length) {
+    sub.textContent = `${produtos.length} produtos acompanhados`;
+    app.className = "";
+    app.append(el("div", { class: "state", text: "Ainda não há leituras salvas. Rode o workflow “Coletar preços” em Actions e atualize esta página em alguns minutos." }));
+    return;
+  }
+
+  const datas = Object.values(hist).flat().map((r) => r.data).sort();
+  sub.textContent = `${produtos.length} produtos acompanhados · última coleta em ${fmtDataHora(datas[datas.length - 1])}`;
+  for (const p of produtos) app.append(montarCard(p, hist[p.id] || []));
+}
+iniciar();
+</script>
+</body>
+</html>
