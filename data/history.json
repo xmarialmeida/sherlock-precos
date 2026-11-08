@@ -1,0 +1,23 @@
+{
+ "geladeira-brastemp-bre66ak": [
+  {
+   "data": "2026-11-07T22:24-03:00",
+   "preco_atual": 4368.0,
+   "preco_original": 6198.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 436.8,
+   "total_parcelado": 4368.0
+  }
+ ],
+ "fogao-brastemp-byo4ebr": [
+  {
+   "data": "2026-11-07T22:24-03:00",
+   "preco_atual": 1862.0,
+   "preco_original": 2971.0,
+   "preco_pix": 1862.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 196.0,
+   "total_parcelado": 1960.0
+  }
+ ]
+}
