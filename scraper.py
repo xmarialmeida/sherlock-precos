@@ -158,30 +158,68 @@ def avaliar_avisos(nome, url, anteriores, reg, pct, alvo):
 
 # ---------- leitura das páginas ----------
 
-def extrair_brastemp(html):
-    """Lê preço, Pix e parcelamento de uma página da loja Brastemp."""
-    soup = BeautifulSoup(html, "html.parser")
-    texto = soup.get_text(" ", strip=True)
-    dados = {}
+def numero(valor):
+    """'3689.00' | '3.689,00' | 'R$ 3.689,00' | 3689 -> 3689.0 (None se não der)."""
+    txt = str(valor).strip().replace("R$", "").replace(" ", "")
+    if not txt:
+        return None
+    if "," in txt:  # formato brasileiro
+        txt = txt.replace(".", "").replace(",", ".")
+    try:
+        v = float(txt)
+    except ValueError:
+        return None
+    return v if v > 0 else None
 
-    meta = (
-        soup.find("meta", attrs={"property": "product:price:amount"})
-        or soup.find("meta", attrs={"name": "product:price:amount"})
+
+def preco_da_meta(soup):
+    """Preço publicado em meta tags padronizadas (Open Graph / schema.org)."""
+    candidatos = (
+        {"property": "product:price:amount"},
+        {"name": "product:price:amount"},
+        {"property": "og:price:amount"},
+        {"itemprop": "price"},
     )
-    if meta and meta.get("content"):
+    for attrs in candidatos:
+        tag = soup.find(attrs=attrs)
+        if tag:
+            v = numero(tag.get("content") or tag.get_text())
+            if v:
+                return v
+    return None
+
+
+def precos_jsonld(soup):
+    """Preços de blocos JSON-LD (schema.org Offer/AggregateOffer), na ordem em que aparecem."""
+    achados = []
+    for tag in soup.find_all("script", attrs={"type": "application/ld+json"}):
         try:
-            dados["preco_atual"] = float(meta["content"])
+            dados = json.loads(tag.string or tag.get_text())
         except ValueError:
-            pass
+            continue
+        fila = [dados]
+        while fila:
+            x = fila.pop(0)
+            if isinstance(x, list):
+                fila.extend(x)
+            elif isinstance(x, dict):
+                tipo = x.get("@type")
+                tipos = tipo if isinstance(tipo, list) else [tipo]
+                if "Offer" in tipos or "AggregateOffer" in tipos:
+                    for chave in ("price", "lowPrice"):
+                        v = numero(x[chave]) if x.get(chave) not in (None, "") else None
+                        if v:
+                            achados.append(v)
+                            break
+                fila.extend(v for v in x.values() if isinstance(v, (dict, list)))
+    return achados
 
-    m = re.search(PRECO + r"\s*(?:\S+\s*){0,3}Oferta", texto)
-    if m:
-        dados["preco_original"] = brl_para_float(m.group(1))
 
+def ler_pagamento(texto, dados):
+    """Acrescenta Pix e parcelamento sem juros, quando aparecem no texto da página."""
     m = re.search(r"R\$\s*" + PRECO + r"\s*no\s*Pix", texto, re.I)
     if m:
         dados["preco_pix"] = brl_para_float(m.group(1))
-
     m = re.search(r"(\d+)\s*x\s*de\s*R\$\s*" + PRECO + r"\s*sem\s*juros", texto, re.I)
     if m:
         parcelas = int(m.group(1))
@@ -190,22 +228,67 @@ def extrair_brastemp(html):
         dados["valor_parcela"] = valor
         dados["total_parcelado"] = round(parcelas * valor, 2)
 
+
+def extrair_generico(html):
+    """Leitor para qualquer loja que publique o preço de forma padronizada.
+
+    Tenta, nesta ordem: meta tags de produto e JSON-LD (schema.org).
+    Se a página não tiver nenhum dos dois, devolve {} (não chutamos preço).
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    preco = preco_da_meta(soup)
+    if not preco:
+        ld = precos_jsonld(soup)
+        preco = ld[0] if ld else None
+    if not preco:
+        return {}
+    dados = {"preco_atual": preco}
+    ler_pagamento(soup.get_text(" ", strip=True), dados)
     return dados
 
 
+def extrair_brastemp(html):
+    """Brastemp: leitor genérico + o preço 'de' (antes da etiqueta 'Oferta')."""
+    dados = extrair_generico(html)
+    if dados:
+        texto = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+        m = re.search(PRECO + r"\s*(?:\S+\s*){0,3}Oferta", texto)
+        if m:
+            dados["preco_original"] = brl_para_float(m.group(1))
+    return dados
+
+
+# Lojas com leitor específico. Todas as outras usam o leitor genérico.
 EXTRATORES = {"brastemp": extrair_brastemp}
 
-# Domínio -> nome da loja. Cada loja nova entra aqui e em EXTRATORES.
-DOMINIOS = {"brastemp.com.br": "Brastemp"}
+# Nomes bonitos para lojas conhecidas. Qualquer outro site recebe o nome do domínio.
+NOMES_LOJAS = {
+    "brastemp.com.br": "Brastemp",
+    "fastshop.com.br": "Fast Shop",
+    "magazineluiza.com.br": "Magazine Luiza",
+    "mercadolivre.com.br": "Mercado Livre",
+    "casasbahia.com.br": "Casas Bahia",
+    "kabum.com.br": "KaBuM",
+    "amazon.com.br": "Amazon",
+    "shopee.com.br": "Shopee",
+    "carrefour.com.br": "Carrefour",
+}
 
 
 def loja_por_url(url):
-    """Devolve o nome da loja pelo endereço do link, ou None se não for suportada."""
+    """Nome da loja pelo endereço do link (None se o link não tiver endereço válido)."""
     host = (urlparse(url).hostname or "").lower()
-    for dominio, loja in DOMINIOS.items():
+    if not host:
+        return None
+    for dominio, loja in NOMES_LOJAS.items():
         if host == dominio or host.endswith("." + dominio):
             return loja
-    return None
+    partes = host.split(".")
+    if len(partes) >= 3 and partes[-1] == "br" and partes[-2] in ("com", "net", "org"):
+        base = partes[-3]
+    else:
+        base = partes[-2] if len(partes) >= 2 else partes[0]
+    return base.capitalize()
 
 
 def baixar(url):
@@ -222,25 +305,34 @@ def baixar(url):
     return None, ultimo_erro
 
 
-def diagnostico(rotulo, html):
-    """Mostra no log o que o robô enxergou. Só roda com DEBUG=1 (execução manual)."""
+def inspecionar(html, max_valores=8):
+    """Resume o que o robô enxerga na página (para diagnóstico, em linhas de texto)."""
     soup = BeautifulSoup(html, "html.parser")
     texto = soup.get_text(" ", strip=True)
-    print(f"\n===== DIAGNÓSTICO: {rotulo} =====")
-    for chave in ("property", "name"):
-        meta = soup.find("meta", attrs={chave: "product:price:amount"})
-        if meta:
-            print(f"meta product:price:amount = {meta.get('content')}")
-            break
-    else:
-        print("meta product:price:amount: NÃO ENCONTRADA")
-    print("Parcelamentos encontrados no texto:")
-    for m in re.finditer(r"\d+\s*x\s*de\s*R\$\s*" + PRECO + r"[^.]{0,20}", texto, re.I):
-        print("  -", m.group(0).strip())
-    print("Primeiros valores 'R$' encontrados (com contexto):")
-    for m in list(re.finditer(r"R\$\s*" + PRECO, texto))[:12]:
+    linhas = []
+    titulo = soup.title.get_text().strip()[:90] if soup.title else "(sem título)"
+    linhas.append(f"título da página: {titulo}")
+    meta = preco_da_meta(soup)
+    linhas.append(f"meta de preço: {formatar(meta) if meta else 'não encontrada'}")
+    ld = precos_jsonld(soup)
+    linhas.append("JSON-LD (schema.org): " + (", ".join(formatar(v) for v in ld[:3]) if ld else "não encontrado"))
+    parc = [m.group(0).strip() for m in re.finditer(r"\d+\s*x\s*de\s*R\$\s*" + PRECO + r"[^.]{0,20}", texto, re.I)][:3]
+    linhas.append("parcelamentos no texto: " + (" | ".join(parc) if parc else "nenhum"))
+    if re.search(r"captcha|are you a robot|acesso negado|access denied|verifique que você", texto, re.I):
+        linhas.append("⚠️ a página parece pedir verificação anti-robô")
+    valores = list(re.finditer(r"R\$\s*" + PRECO, texto))
+    linhas.append(f"valores 'R$' no texto: {len(valores)}")
+    for m in valores[:max_valores]:
         ini = max(0, m.start() - 30)
-        print("  -", texto[ini : m.end() + 25].replace("\n", " "))
+        linhas.append("  - " + texto[ini : m.end() + 25].replace("\n", " "))
+    return linhas
+
+
+def diagnostico(rotulo, html):
+    """Mostra no log o que o robô enxergou. Só roda com DEBUG=1 (execução manual)."""
+    print(f"\n===== DIAGNÓSTICO: {rotulo} =====")
+    for linha in inspecionar(html):
+        print(linha)
     try:
         pais = requests.get("https://ipinfo.io/country", timeout=15).text.strip()
         print(f"País de onde o robô está acessando: {pais}")
@@ -251,9 +343,7 @@ def diagnostico(rotulo, html):
 
 def coletar(oferta, rotulo):
     agora = datetime.now(FUSO).isoformat(timespec="minutes")
-    extrator = EXTRATORES.get(oferta["loja"].lower())
-    if not extrator:
-        return {"data": agora, "erro": f"loja '{oferta['loja']}' ainda não suportada"}
+    extrator = EXTRATORES.get(oferta["loja"].lower(), extrair_generico)
 
     html, erro = baixar(oferta["url"])
     if erro:
