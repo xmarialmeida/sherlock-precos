@@ -1,16 +1,30 @@
-[
-  {
-    "id": "geladeira-brastemp-bre66ak",
-    "nome": "Geladeira Inteligente B.Smart Brastemp 500L Inox (BRE66AK)",
-    "loja": "Brastemp",
-    "url": "https://www.brastemp.com.br/geladeira-inteligente-b--smart-brastemp-frost-free-inverse-500-litros-cor-inox-bre66ak/p",
-    "preco_alvo": null
+{
+  "configuracoes": {
+    "queda_minima_pct": 1,
+    "variacao_suspeita_pct": 50
   },
-  {
-    "id": "fogao-brastemp-byo4ebr",
-    "nome": "Fogão Brastemp 4 bocas de embutir Inox (BYO4EBR)",
-    "loja": "Brastemp",
-    "url": "https://www.brastemp.com.br/fogao-brastemp-4-bocas-de-embutir-inox-com-dupla-chama-e-grades-individuais-byo4ebr/p",
-    "preco_alvo": null
-  }
-]
+  "produtos": [
+    {
+      "id": "geladeira-brastemp-bre66ak",
+      "nome": "Geladeira Inteligente B.Smart Brastemp 500L Inox (BRE66AK)",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Brastemp",
+          "url": "https://www.brastemp.com.br/geladeira-inteligente-b--smart-brastemp-frost-free-inverse-500-litros-cor-inox-bre66ak/p"
+        }
+      ]
+    },
+    {
+      "id": "fogao-brastemp-byo4ebr",
+      "nome": "Fogão Brastemp 4 bocas de embutir Inox (BYO4EBR)",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Brastemp",
+          "url": "https://www.brastemp.com.br/fogao-brastemp-4-bocas-de-embutir-inox-com-dupla-chama-e-grades-individuais-byo4ebr/p"
+        }
+      ]
+    }
+  ]
+}
