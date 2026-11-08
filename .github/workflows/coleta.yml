@@ -9,13 +9,18 @@ on:
 permissions:
   contents: write # necessário para o robô salvar o histórico no repositório
 
+# garante que o bot do Telegram e o coletor nunca gravem os mesmos arquivos ao mesmo tempo
+concurrency:
+  group: rastreador-dados
+  cancel-in-progress: false
+
 jobs:
   coletar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -35,4 +40,4 @@ jobs:
           git config user.name "rastreador-bot"
           git config user.email "rastreador-bot@users.noreply.github.com"
           git add data/history.json
-          git diff --staged --quiet || (git commit -m "Atualiza histórico de preços" && git push)
+          git diff --staged --quiet || (git commit -m "Atualiza histórico de preços" && git pull --rebase && git push)
