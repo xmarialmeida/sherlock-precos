@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 """Rastreador de preços.
 
-Lê products.json, consulta cada página, guarda o histórico em data/history.json
-e avisa no Telegram quando algo relevante acontece.
+Lê products.json, consulta cada oferta (produto + loja), guarda o histórico em
+data/history.json e avisa no Telegram quando algo relevante acontece.
+
+Regras de negócio (ajustáveis em products.json -> "configuracoes"):
+  - queda_minima_pct:      queda mínima (em %) para avisar. Padrão 1.
+  - variacao_suspeita_pct: salto (em %) a partir do qual uma leitura é tratada
+                           como suspeita e só entra no histórico depois de
+                           confirmada pela coleta seguinte. Padrão 50.
+Cada produto pode ter o seu próprio "queda_minima_pct".
 """
 import json
 import os
@@ -19,6 +26,9 @@ RAIZ = Path(__file__).parent
 ARQ_PRODUTOS = RAIZ / "products.json"
 ARQ_HISTORICO = RAIZ / "data" / "history.json"
 FUSO = timezone(timedelta(hours=-3))  # horário de Brasília
+
+PADROES = {"queda_minima_pct": 1.0, "variacao_suspeita_pct": 50.0}
+TOLERANCIA_CONFIRMACAO_PCT = 5.0  # leitura seguinte "perto" da suspeita = confirmada
 
 HEADERS = {
     "User-Agent": (
@@ -46,10 +56,100 @@ def formatar(valor):
     return f"R$ {s}"
 
 
+def slug(texto):
+    return re.sub(r"[^a-z0-9]+", "-", texto.lower()).strip("-")
+
+
+def chave_oferta(produto, oferta):
+    """Identificador da oferta no histórico: produto + loja."""
+    return oferta.get("id") or f"{produto['id']}@{slug(oferta['loja'])}"
+
+
 def melhor_preco(reg):
     """Menor valor pago hoje: o Pix, se existir e for menor, senão o preço atual."""
     candidatos = [v for v in (reg.get("preco_atual"), reg.get("preco_pix")) if v]
     return min(candidatos) if candidatos else None
+
+
+def validos(hist):
+    """Leituras confiáveis: sem erro e sem a marca de suspeita."""
+    return [r for r in hist if not r.get("erro") and not r.get("suspeita")]
+
+
+# ---------- regras de negócio (funções puras, fáceis de testar) ----------
+
+def base_alerta(leituras, pct):
+    """Preço de referência para decidir se houve queda relevante.
+
+    Sobe junto com o preço, mas só desce quando a queda acumulada atinge o
+    limite. Assim, várias quedinhas de centavos não passam despercebidas
+    para sempre nem geram aviso a cada uma.
+    """
+    base = None
+    for r in leituras:
+        p = melhor_preco(r)
+        if base is None or p > base:
+            base = p
+        elif p <= base * (1 - pct / 100):
+            base = p
+    return base
+
+
+def classificar_leitura(hist, reg, limite_suspeita_pct):
+    """Decide se a leitura nova é suspeita ou confirma uma suspeita anterior.
+
+    Retorna (suspeita_nova, suspeita_confirmada). Pode alterar `hist`
+    (remove a marca da leitura anterior quando confirmada).
+    """
+    if reg.get("erro"):
+        return False, None
+
+    leituras_ok = [r for r in hist if not r.get("erro")]
+    ultima = leituras_ok[-1] if leituras_ok else None
+
+    # 1) a leitura anterior era suspeita e esta a confirma?
+    if ultima and ultima.get("suspeita"):
+        p_susp, p_novo = melhor_preco(ultima), melhor_preco(reg)
+        if abs(p_novo - p_susp) / p_susp * 100 <= TOLERANCIA_CONFIRMACAO_PCT:
+            ultima.pop("suspeita")
+            return False, ultima
+
+    # 2) esta leitura destoa muito da última leitura confiável?
+    confiaveis = validos(hist)
+    if confiaveis:
+        ref = melhor_preco(confiaveis[-1])
+        desvio = abs(melhor_preco(reg) - ref) / ref * 100
+        if desvio > limite_suspeita_pct:
+            reg["suspeita"] = True
+            return True, None
+    return False, None
+
+
+def avaliar_avisos(nome, url, anteriores, reg, pct, alvo):
+    """Gera os avisos de uma leitura nova, comparando com as anteriores."""
+    avisos = []
+    if not anteriores:
+        return avisos
+    p = melhor_preco(reg)
+    base = base_alerta(anteriores, pct)
+    if p <= base * (1 - pct / 100):
+        queda = (1 - p / base) * 100
+        avisos.append(
+            f"📉 Baixou {f'{queda:.1f}'.replace('.', ',')}%: {nome}\n"
+            f"{formatar(base)} → {formatar(p)}\n{url}"
+        )
+    minimo = min(melhor_preco(r) for r in anteriores)
+    if len(anteriores) >= 2 and p <= minimo * (1 - pct / 100):
+        avisos.append(
+            f"🏆 Menor preço registrado: {nome}\n"
+            f"{formatar(p)} (antes: {formatar(minimo)})\n{url}"
+        )
+    if alvo and p <= alvo < melhor_preco(anteriores[-1]):
+        avisos.append(
+            f"🎯 Bateu sua meta de {formatar(alvo)}: {nome}\n"
+            f"Agora: {formatar(p)}\n{url}"
+        )
+    return avisos
 
 
 # ---------- leitura das páginas ----------
@@ -106,11 +206,11 @@ def baixar(url):
     return None, ultimo_erro
 
 
-def diagnostico(produto, html):
+def diagnostico(rotulo, html):
     """Mostra no log o que o robô enxergou. Só roda com DEBUG=1 (execução manual)."""
     soup = BeautifulSoup(html, "html.parser")
     texto = soup.get_text(" ", strip=True)
-    print(f"\n===== DIAGNÓSTICO: {produto['id']} =====")
+    print(f"\n===== DIAGNÓSTICO: {rotulo} =====")
     for chave in ("property", "name"):
         meta = soup.find("meta", attrs={chave: "product:price:amount"})
         if meta:
@@ -133,18 +233,18 @@ def diagnostico(produto, html):
     print("=====\n")
 
 
-def coletar(produto):
+def coletar(oferta, rotulo):
     agora = datetime.now(FUSO).isoformat(timespec="minutes")
-    extrator = EXTRATORES.get(produto["loja"].lower())
+    extrator = EXTRATORES.get(oferta["loja"].lower())
     if not extrator:
-        return {"data": agora, "erro": f"loja '{produto['loja']}' ainda não suportada"}
+        return {"data": agora, "erro": f"loja '{oferta['loja']}' ainda não suportada"}
 
-    html, erro = baixar(produto["url"])
+    html, erro = baixar(oferta["url"])
     if erro:
         return {"data": agora, "erro": erro}
 
     if os.environ.get("DEBUG") == "1":
-        diagnostico(produto, html)
+        diagnostico(rotulo, html)
 
     dados = extrator(html)
     if not dados.get("preco_atual"):
@@ -174,78 +274,98 @@ def enviar_telegram(texto):
         print(f"Falha ao enviar ao Telegram ({type(e).__name__}).")
 
 
-# ---------- lógica principal ----------
+# ---------- resumo ----------
 
-def validos(hist):
-    return [r for r in hist if not r.get("erro")]
-
-
-def linha_resumo(produto, reg):
+def linha_oferta(oferta, reg):
     if reg.get("erro"):
-        return f"• {produto['nome']}\n  ⚠️ sem leitura ({reg['erro']})"
-    partes = [f"• {produto['nome']}", f"  Preço: {formatar(reg['preco_atual'])}"]
+        return f"  {oferta['loja']}: ⚠️ sem leitura ({reg['erro']})"
+    if reg.get("suspeita"):
+        return f"  {oferta['loja']}: {formatar(reg['preco_atual'])} (a confirmar)"
+    partes = [f"  {oferta['loja']}: {formatar(reg['preco_atual'])}"]
     if reg.get("preco_pix"):
-        partes.append(f"  Pix: {formatar(reg['preco_pix'])}")
+        partes.append(f"Pix {formatar(reg['preco_pix'])}")
     if reg.get("parcelas_sem_juros"):
-        partes.append(
-            f"  {reg['parcelas_sem_juros']}x de {formatar(reg['valor_parcela'])} sem juros"
-        )
-    return "\n".join(partes)
+        partes.append(f"{reg['parcelas_sem_juros']}x de {formatar(reg['valor_parcela'])} s/ juros")
+    return " · ".join(partes)
+
+
+# ---------- principal ----------
+
+def carregar_produtos():
+    dados = json.loads(ARQ_PRODUTOS.read_text(encoding="utf-8"))
+    cfg = {**PADROES, **dados.get("configuracoes", {})}
+    return cfg, dados["produtos"]
+
+
+def migrar_historico(historico, produtos):
+    """Formato antigo (chave = id do produto) -> novo (chave = produto@loja)."""
+    for p in produtos:
+        ofertas = p["ofertas"]
+        if p["id"] in historico and len(ofertas) == 1:
+            nova = chave_oferta(p, ofertas[0])
+            if nova not in historico:
+                historico[nova] = historico.pop(p["id"])
 
 
 def main():
-    produtos = json.loads(ARQ_PRODUTOS.read_text(encoding="utf-8"))
+    cfg, produtos = carregar_produtos()
     historico = {}
     if ARQ_HISTORICO.exists():
         historico = json.loads(ARQ_HISTORICO.read_text(encoding="utf-8"))
+    migrar_historico(historico, produtos)
 
     primeira_vez = not historico
     pedir_resumo = os.environ.get("ENVIAR_RESUMO") == "1" or primeira_vez
-    avisos, linhas = [], []
+    avisos, blocos = [], []
 
     for p in produtos:
-        hist = historico.setdefault(p["id"], [])
-        anteriores = validos(hist)
-        ultimo_foi_erro = bool(hist) and bool(hist[-1].get("erro"))
+        pct = float(p.get("queda_minima_pct", cfg["queda_minima_pct"]))
+        limite_susp = float(cfg["variacao_suspeita_pct"])
+        linhas, melhor = [], None
 
-        reg = coletar(p)
-        hist.append(reg)
-        linhas.append(linha_resumo(p, reg))
+        for oferta in p["ofertas"]:
+            chave = chave_oferta(p, oferta)
+            hist = historico.setdefault(chave, [])
+            nome = f"{p['nome']} ({oferta['loja']})"
+            ultimo_foi_erro = bool(hist) and bool(hist[-1].get("erro"))
 
-        if reg.get("erro"):
-            print(f"[{p['id']}] erro: {reg['erro']}")
-            if not ultimo_foi_erro:
+            reg = coletar(oferta, chave)
+            anteriores = validos(hist)  # antes de qualquer reclassificação
+            nova_susp, confirmada = classificar_leitura(hist, reg, limite_susp)
+            hist.append(reg)
+            linhas.append(linha_oferta(oferta, reg))
+
+            if reg.get("erro"):
+                print(f"[{chave}] erro: {reg['erro']}")
+                if not ultimo_foi_erro:
+                    avisos.append(
+                        f"⚠️ Não consegui ler o preço de {nome} ({reg['erro']}).\n{oferta['url']}"
+                    )
+                continue
+
+            print(f"[{chave}] {formatar(reg['preco_atual'])}"
+                  + (" (suspeita)" if nova_susp else "")
+                  + (" (confirmou a anterior)" if confirmada else ""))
+
+            if nova_susp:
+                ref = melhor_preco(anteriores[-1])
                 avisos.append(
-                    f"⚠️ Não consegui ler o preço de {p['nome']} ({reg['erro']}).\n{p['url']}"
+                    f"👀 Leitura fora do padrão: {nome}\n"
+                    f"{formatar(ref)} → {formatar(melhor_preco(reg))}\n"
+                    f"Vou confirmar na próxima coleta antes de contar no histórico.\n{oferta['url']}"
                 )
-            continue
+                continue
 
-        print(f"[{p['id']}] {formatar(reg['preco_atual'])}")
-        if not anteriores:
-            continue
+            avisos += avaliar_avisos(nome, oferta["url"], anteriores, reg, pct, p.get("preco_alvo"))
 
-        antes = anteriores[-1]
-        agora_melhor, antes_melhor = melhor_preco(reg), melhor_preco(antes)
+            preco = melhor_preco(reg)
+            if melhor is None or preco < melhor[0]:
+                melhor = (preco, oferta["loja"])
 
-        if reg["preco_atual"] < antes["preco_atual"]:
-            avisos.append(
-                f"📉 Baixou: {p['nome']}\n"
-                f"{formatar(antes['preco_atual'])} → {formatar(reg['preco_atual'])}\n{p['url']}"
-            )
-
-        minimo_anterior = min(melhor_preco(r) for r in anteriores)
-        if len(anteriores) >= 2 and agora_melhor < minimo_anterior:
-            avisos.append(
-                f"🏆 Menor preço registrado: {p['nome']}\n"
-                f"{formatar(agora_melhor)} (antes: {formatar(minimo_anterior)})\n{p['url']}"
-            )
-
-        alvo = p.get("preco_alvo")
-        if alvo and agora_melhor <= alvo < antes_melhor:
-            avisos.append(
-                f"🎯 Bateu sua meta de {formatar(alvo)}: {p['nome']}\n"
-                f"Agora: {formatar(agora_melhor)}\n{p['url']}"
-            )
+        cabeca = f"• {p['nome']}"
+        if len(p["ofertas"]) > 1 and melhor:
+            cabeca += f"\n  🏅 Menor preço hoje: {formatar(melhor[0])} ({melhor[1]})"
+        blocos.append(cabeca + "\n" + "\n".join(linhas))
 
     ARQ_HISTORICO.parent.mkdir(exist_ok=True)
     ARQ_HISTORICO.write_text(
@@ -253,7 +373,7 @@ def main():
     )
 
     if pedir_resumo:
-        enviar_telegram("🛒 Rastreador de preços ativo!\n\n" + "\n\n".join(linhas))
+        enviar_telegram("🛒 Rastreador de preços\n\n" + "\n\n".join(blocos))
     for aviso in avisos:
         enviar_telegram(aviso)
 
