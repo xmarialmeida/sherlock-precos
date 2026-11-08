@@ -12,6 +12,10 @@
         {
           "loja": "Brastemp",
           "url": "https://www.brastemp.com.br/geladeira-inteligente-b--smart-brastemp-frost-free-inverse-500-litros-cor-inox-bre66ak/p"
+        },
+        {
+          "loja": "Fast Shop",
+          "url": "https://site.fastshop.com.br/refrigerador-brastemp-inverse-frost-free-500l-inox-classe-a-inteligente-com-fresh-space-bivolt---bre66ak-brbre66akxna_prd/p?idsku=156903"
         }
       ]
     },
@@ -23,17 +27,6 @@
         {
           "loja": "Brastemp",
           "url": "https://www.brastemp.com.br/fogao-brastemp-4-bocas-de-embutir-inox-com-dupla-chama-e-grades-individuais-byo4ebr/p"
-        }
-      ]
-    },
-    {
-      "id": "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar",
-      "nome": "Micro-ondas Brastemp 23L Inox com Multi Preparos - BMS23AR",
-      "preco_alvo": null,
-      "ofertas": [
-        {
-          "loja": "Brastemp",
-          "url": "https://www.brastemp.com.br/micro-ondas-brastemp-23l-inox-com-multi-preparos---bms23ar/p"
         }
       ]
     }
