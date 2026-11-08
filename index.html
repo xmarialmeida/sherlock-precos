@@ -16,6 +16,8 @@
     --text-3: #6b6a64;
     --grid: #e8e7e1;
     --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -28,6 +30,8 @@
       --text-3: #908f86;
       --grid: #2a2926;
       --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
     }
   }
   * { box-sizing: border-box; }
@@ -76,18 +80,20 @@
     margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 0.85rem;
     background: var(--chip); color: var(--text-2);
   }
-  .chart-wrap { position: relative; margin-top: 16px; }
-  .chart-title { font-size: 0.8rem; color: var(--text-3); margin-bottom: 4px; }
+  .chart-wrap { position: relative; margin-top: 6px; }
+  .chart-title { font-size: 0.8rem; color: var(--text-3); margin-top: 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 0.8rem; color: var(--text-2); }
+  .key { display: inline-block; width: 14px; height: 0; border-top: 2px solid; margin-right: 6px; vertical-align: middle; }
   svg.chart { display: block; width: 100%; height: auto; touch-action: pan-y; }
   svg.chart:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 6px; }
   .tip {
-    position: absolute; pointer-events: none; z-index: 2; min-width: 150px;
+    position: absolute; pointer-events: none; z-index: 2; min-width: 160px;
     background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
     padding: 8px 10px; font-size: 0.78rem; color: var(--text-2);
     box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none;
   }
-  .tip strong { display: block; color: var(--text); font-size: 1rem; }
-  .tip .line-key { display: inline-block; width: 12px; height: 0; border-top: 2px solid var(--series-1); margin-right: 6px; vertical-align: middle; }
+  .tip .row { display: flex; align-items: baseline; gap: 6px; margin-top: 3px; }
+  .tip .row strong { color: var(--text); font-size: 0.95rem; margin-left: auto; padding-left: 10px; }
   .empty { color: var(--text-2); font-size: 0.85rem; padding: 18px 0; }
   button.toggle {
     margin-top: 10px; background: none; border: 0; padding: 4px 0; cursor: pointer;
@@ -95,9 +101,12 @@
   }
   button.toggle:focus-visible { outline: 2px solid var(--series-1); border-radius: 4px; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
-  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border); vertical-align: top; }
   th { color: var(--text-3); font-weight: 500; }
+  td a { color: var(--series-1); text-decoration: none; white-space: nowrap; }
   .tablebox { max-height: 260px; overflow: auto; }
+  .compare { margin-top: 16px; overflow-x: auto; }
+  .compare .best td { font-weight: 600; }
   .note { margin-top: 10px; font-size: 0.75rem; color: var(--text-3); }
   footer { margin-top: 28px; font-size: 0.8rem; color: var(--text-3); }
   footer p { margin: 6px 0; }
@@ -115,6 +124,7 @@
   <footer>
     <p><strong>Preço de referência:</strong> é o que o robô enxerga ao acessar a loja, de um servidor fora do Brasil. Em alguns produtos, o valor no seu CEP pode ser ligeiramente diferente. Use “Conferir na loja” antes de comprar.</p>
     <p><strong>Como o veredito é calculado:</strong> comparamos o menor valor à vista de hoje (Pix, quando existe) com o menor valor já registrado por este rastreador. Com poucos dias de histórico, ele ainda é fraco; por isso mostramos sempre quantos dias e leituras ele considera.</p>
+    <p><strong>Leituras suspeitas:</strong> saltos muito grandes de preço só entram na conta depois de confirmados pela coleta seguinte.</p>
   </footer>
 </main>
 
@@ -126,6 +136,8 @@ const CONFIG = { usuario: "xmarialmeida", repo: "rastreador-precos", branch: "ma
 const MIN_LEITURAS_VEREDITO = 6;        // ~3 dias com 2 coletas por dia
 const RAW = `https://raw.githubusercontent.com/${CONFIG.usuario}/${CONFIG.repo}/${CONFIG.branch}/`;
 const DEMO = new URLSearchParams(location.search).has("demo");
+const CORES = ["var(--series-1)", "var(--series-2)", "var(--series-3)"]; // por ordem da oferta, nunca ciclam
+const JANELA_AGRUPAR_MS = 30 * 60 * 1000;
 
 // ====== UTILITÁRIOS ======
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -139,7 +151,6 @@ function el(tag, props = {}, ...filhos) {
   for (const [k, v] of Object.entries(props)) {
     if (k === "class") n.className = v;
     else if (k === "text") n.textContent = v;
-    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
     else n.setAttribute(k, v);
   }
   for (const f of filhos) if (f) n.append(f);
@@ -151,8 +162,10 @@ function sv(tag, attrs = {}) {
   return n;
 }
 
+const slug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const chaveOferta = (prod, o) => o.id || `${prod.id}@${slug(o.loja)}`;
 const melhor = (r) => Math.min(...[r.preco_atual, r.preco_pix].filter(Boolean));
-const validos = (h) => h.filter((r) => !r.erro && r.preco_atual);
+const validos = (h) => h.filter((r) => !r.erro && !r.suspeita && r.preco_atual);
 
 // ====== DADOS ======
 async function buscarJSON(urls) {
@@ -171,36 +184,38 @@ function dadosDemo() {
   let s = 12345;
   const rnd = () => { s |= 0; s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const produtos = [
-    { id: "geladeira-demo", nome: "Geladeira Inteligente B.Smart Brastemp 500L Inox", loja: "Brastemp", url: "#" },
-    { id: "fogao-demo", nome: "Fogão Brastemp 4 bocas de embutir Inox", loja: "Brastemp", url: "#" },
+    { id: "geladeira-demo", nome: "Geladeira Inteligente 500L Inox", ofertas: [
+      { loja: "Loja A", url: "#" }, { loja: "Loja B", url: "#" }, { loja: "Loja C", url: "#" } ] },
+    { id: "fogao-demo", nome: "Fogão 4 bocas de embutir Inox", ofertas: [{ loja: "Loja A", url: "#" }] },
   ];
   const hist = {};
   const fim = Date.now();
-  const mk = (base, passoMax, comPix, original, alvoFinal) => {
+  const mk = (base, passoMax, comPix, original, alvoFinal, deslocamento) => {
     const out = []; let p = base;
     for (let i = 0; i < 60; i++) {
       p = Math.max(base * 0.93, Math.min(base * 1.08, p + (rnd() - 0.5) * passoMax));
-      if (i === 59) p = alvoFinal;
-      p = Math.round(p);
-      const t = new Date(fim - (59 - i) * 12 * 3600 * 1000).toISOString();
-      const r = { data: t, preco_atual: p, preco_original: original, parcelas_sem_juros: 10 };
-      r.valor_parcela = comPix ? Math.round(p * 1.053) / 10 : p / 10;
+      let v = Math.round(i === 59 ? alvoFinal : p + deslocamento);
+      const t = new Date(fim - (59 - i) * 12 * 3600 * 1000 + Math.round(rnd() * 600000)).toISOString();
+      const r = { data: t, preco_atual: v, preco_original: original, parcelas_sem_juros: 10 };
+      r.valor_parcela = comPix ? Math.round(v * 1.053) / 10 : v / 10;
       r.total_parcelado = Math.round(r.valor_parcela * 10 * 100) / 100;
-      if (comPix) r.preco_pix = p;
+      if (comPix) r.preco_pix = v;
       out.push(r);
     }
     return out;
   };
-  hist["geladeira-demo"] = mk(4400, 90, false, 6198, 4290);
-  hist["fogao-demo"] = mk(1900, 40, true, 2971, 1905);
-  return { produtos, hist };
+  hist["geladeira-demo@loja-a"] = mk(4400, 90, false, 6198, 4290, 0);
+  hist["geladeira-demo@loja-b"] = mk(4400, 90, true, 6198, 4350, 60);
+  hist["geladeira-demo@loja-c"] = mk(4400, 90, false, 6198, 4480, 120);
+  hist["fogao-demo@loja-a"] = mk(1900, 40, true, 2971, 1905, 0);
+  return { cfg: {}, produtos, hist };
 }
 
 // ====== VEREDITO ======
 function veredito(vals) {
   const n = vals.length;
   const dias = Math.max(1, Math.round((new Date(vals[n - 1].data) - new Date(vals[0].data)) / 86400000));
-  const base = `${n} leituras em ${dias} ${dias === 1 ? "dia" : "dias"}`;
+  const base = `${n} ${n === 1 ? "leitura" : "leituras"} em ${dias} ${dias === 1 ? "dia" : "dias"}`;
   if (n < MIN_LEITURAS_VEREDITO) return { rotulo: `⏳ Coletando histórico (${n} de ${MIN_LEITURAS_VEREDITO} leituras)`, base };
   const atual = melhor(vals[n - 1]);
   const minimo = Math.min(...vals.map(melhor));
@@ -211,83 +226,105 @@ function veredito(vals) {
   return { rotulo: `↗ ${txt}% acima do menor valor registrado`, base };
 }
 
-// ====== GRÁFICO ======
-function desenharGrafico(wrap, vals) {
+// ====== GRÁFICO (1 a 3 séries) ======
+// series: [{ nome, cor, pts: [{ t, v, r }] }]
+function desenharGrafico(wrap, series) {
   wrap.replaceChildren();
+  const multi = series.length > 1;
   const W = Math.max(280, wrap.clientWidth || 360), H = 200;
-  const m = { l: 62, r: 14, t: 10, b: 26 };
+  const m = { l: 62, r: multi ? 84 : 14, t: 10, b: 26 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const pontos = vals.map((r) => ({ t: new Date(r.data).getTime(), v: melhor(r), r }));
-  const vmin = Math.min(...pontos.map((p) => p.v)), vmax = Math.max(...pontos.map((p) => p.v));
+  const todos = series.flatMap((s) => s.pts);
+  const vmin = Math.min(...todos.map((p) => p.v)), vmax = Math.max(...todos.map((p) => p.v));
   const pad = vmax === vmin ? vmin * 0.02 : (vmax - vmin) * 0.18;
   const passo = vmax - vmin > 400 ? 100 : vmax - vmin > 80 ? 50 : 10;
   const lo = Math.floor((vmin - pad) / passo) * passo, hi = Math.ceil((vmax + pad) / passo) * passo;
-  const t0 = pontos[0].t, t1 = pontos[pontos.length - 1].t;
+  const ts = todos.map((p) => p.t);
+  const t0 = Math.min(...ts), t1 = Math.max(...ts);
   const X = (t) => (t1 === t0 ? m.l + iw / 2 : m.l + ((t - t0) / (t1 - t0)) * iw);
   const Y = (v) => m.t + ih - ((v - lo) / (hi - lo)) * ih;
 
+  const resumo = series.map((s) => `${s.nome}: ${brl.format(s.pts[s.pts.length - 1].v)}`).join("; ");
   const svg = sv("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img", tabindex: "0",
-    "aria-label": `Histórico de preço: ${pontos.length} leituras, de ${brl.format(pontos[0].v)} a ${brl.format(pontos[pontos.length - 1].v)}. Use as setas para percorrer.` });
+    "aria-label": `Histórico de preço. Valores mais recentes: ${resumo}. Use as setas para percorrer.` });
 
-  // grade e eixo Y
   for (const v of [lo, (lo + hi) / 2, hi]) {
     svg.append(sv("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "var(--grid)", "stroke-width": 1 }));
     const tx = sv("text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--text-3)" });
     tx.textContent = brl0.format(v); svg.append(tx);
   }
-  // eixo X (início, meio, fim)
-  const marcas = pontos.length >= 3 && t1 - t0 > 86400000 ? [t0, (t0 + t1) / 2, t1] : [t0, t1];
+  const marcas = todos.length >= 3 && t1 - t0 > 86400000 ? [t0, (t0 + t1) / 2, t1] : t1 === t0 ? [t0] : [t0, t1];
   marcas.forEach((t, i) => {
-    if (i === 1 && marcas.length === 2 && t1 === t0) return;
-    const tx = sv("text", { x: X(t), y: H - 6, "text-anchor": i === 0 ? "start" : i === marcas.length - 1 ? "end" : "middle", "font-size": 11, fill: "var(--text-3)" });
+    const tx = sv("text", { x: X(t), y: H - 6, "text-anchor": marcas.length === 1 ? "middle" : i === 0 ? "start" : i === marcas.length - 1 ? "end" : "middle", "font-size": 11, fill: "var(--text-3)" });
     tx.textContent = fmtData(new Date(t).toISOString()); svg.append(tx);
   });
-  // linha do menor valor
-  if (pontos.length >= 2 && vmax > vmin) {
+
+  if (!multi && todos.length >= 2 && vmax > vmin) {
     svg.append(sv("line", { x1: m.l, x2: W - m.r, y1: Y(vmin), y2: Y(vmin), stroke: "var(--text-3)", "stroke-width": 1, "stroke-dasharray": "4 4" }));
     const tx = sv("text", { x: W - m.r, y: Y(vmin) - 5, "text-anchor": "end", "font-size": 11, fill: "var(--text-2)" });
     tx.textContent = `mínimo ${brl.format(vmin)}`; svg.append(tx);
   }
-  // série
-  if (pontos.length >= 2) {
-    svg.append(sv("polyline", { points: pontos.map((p) => `${X(p.t)},${Y(p.v)}`).join(" "), fill: "none", stroke: "var(--series-1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+
+  for (const s of series) {
+    if (s.pts.length >= 2) svg.append(sv("polyline", { points: s.pts.map((p) => `${X(p.t)},${Y(p.v)}`).join(" "), fill: "none", stroke: s.cor, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const u = s.pts[s.pts.length - 1];
+    svg.append(sv("circle", { cx: X(u.t), cy: Y(u.v), r: 4.5, fill: s.cor, stroke: "var(--surface)", "stroke-width": 2 }));
   }
-  const ult = pontos[pontos.length - 1];
-  svg.append(sv("circle", { cx: X(ult.t), cy: Y(ult.v), r: 4.5, fill: "var(--series-1)", stroke: "var(--surface)", "stroke-width": 2 }));
 
-  // interação
+  // rótulos diretos no fim das linhas (afastados para não se sobrepor)
+  if (multi) {
+    const itens = series.map((s) => ({ nome: s.nome, y: Y(s.pts[s.pts.length - 1].v) })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < itens.length; i++) if (itens[i].y - itens[i - 1].y < 13) itens[i].y = itens[i - 1].y + 13;
+    for (const it of itens) {
+      const tx = sv("text", { x: W - m.r + 9, y: it.y + 4, "font-size": 11, fill: "var(--text-2)" });
+      tx.textContent = it.nome.length > 11 ? it.nome.slice(0, 10) + "…" : it.nome; svg.append(tx);
+    }
+  }
+
+  // instantes de leitura (agrupa leituras da mesma coleta)
+  const instantes = [];
+  for (const t of [...new Set(ts)].sort((a, b) => a - b)) {
+    const ult = instantes[instantes.length - 1];
+    if (ult && t - ult.fim <= JANELA_AGRUPAR_MS) { ult.fim = t; ult.t = (ult.ini + t) / 2; } else instantes.push({ ini: t, fim: t, t });
+  }
+
   const cross = sv("line", { y1: m.t, y2: m.t + ih, stroke: "var(--text-3)", "stroke-width": 1, visibility: "hidden" });
-  const dot = sv("circle", { r: 5, fill: "var(--series-1)", stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" });
+  const bolinhas = series.map((s) => sv("circle", { r: 5, fill: s.cor, stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" }));
   const hit = sv("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
-  svg.append(cross, dot, hit);
-
+  svg.append(cross, ...bolinhas, hit);
   const tip = el("div", { class: "tip", role: "status" });
   wrap.append(svg, tip);
 
+  const maisProxima = (s, t) => s.pts.reduce((b, p) => (Math.abs(p.t - t) < Math.abs(b.t - t) ? p : b));
+
   function mostrar(i) {
-    const p = pontos[i], x = X(p.t), y = Y(p.v);
+    const inst = instantes[i], x = X(inst.t);
     cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
-    dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("visibility", "visible");
-    tip.replaceChildren(
-      el("span", { text: fmtDataHora(p.r.data) }),
-      el("strong", { text: brl.format(p.v) }),
-      el("span", {}, el("span", { class: "line-key" }), document.createTextNode(p.r.preco_pix && p.r.preco_pix < p.r.preco_atual ? "Pix (menor valor à vista)" : "Preço à vista")),
-      p.r.parcelas_sem_juros ? el("div", { text: `${p.r.parcelas_sem_juros}x de ${brl.format(p.r.valor_parcela)} sem juros` }) : null
-    );
+    tip.replaceChildren(el("span", { text: fmtDataHora(new Date(inst.t).toISOString()) }));
+    let yTopo = Infinity;
+    series.forEach((s, k) => {
+      const p = maisProxima(s, inst.t);
+      if (Math.abs(p.t - inst.t) > JANELA_AGRUPAR_MS * 2) { bolinhas[k].setAttribute("visibility", "hidden"); return; }
+      bolinhas[k].setAttribute("cx", X(p.t)); bolinhas[k].setAttribute("cy", Y(p.v)); bolinhas[k].setAttribute("visibility", "visible");
+      yTopo = Math.min(yTopo, Y(p.v));
+      const key = el("span", { class: "key", style: `border-color:${s.cor}` });
+      tip.append(el("div", { class: "row" }, key, document.createTextNode(multi ? s.nome : (p.r.preco_pix && p.r.preco_pix < p.r.preco_atual ? "Pix (menor valor à vista)" : "Preço à vista")), el("strong", { text: brl.format(p.v) })));
+      if (!multi && p.r.parcelas_sem_juros) tip.append(el("div", { text: `${p.r.parcelas_sem_juros}x de ${brl.format(p.r.valor_parcela)} sem juros` }));
+    });
     tip.style.display = "block";
     const escala = svg.getBoundingClientRect().width / W;
     const largura = tip.offsetWidth;
     let left = x * escala + 12;
     if (left + largura > wrap.clientWidth) left = x * escala - largura - 12;
     tip.style.left = Math.max(0, left) + "px";
-    tip.style.top = Math.max(0, y * escala - 20) + "px";
+    tip.style.top = Math.max(0, (isFinite(yTopo) ? yTopo : m.t) * escala - 20) + "px";
     svg.dataset.i = i;
   }
-  function esconder() { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); tip.style.display = "none"; }
+  function esconder() { cross.setAttribute("visibility", "hidden"); bolinhas.forEach((b) => b.setAttribute("visibility", "hidden")); tip.style.display = "none"; }
   const maisProximo = (ev) => {
     const r = svg.getBoundingClientRect(), xs = ((ev.clientX - r.left) / r.width) * W;
     let b = 0, d = Infinity;
-    pontos.forEach((p, i) => { const dd = Math.abs(X(p.t) - xs); if (dd < d) { d = dd; b = i; } });
+    instantes.forEach((p, i) => { const dd = Math.abs(X(p.t) - xs); if (dd < d) { d = dd; b = i; } });
     return b;
   };
   hit.addEventListener("pointermove", (ev) => mostrar(maisProximo(ev)));
@@ -296,8 +333,8 @@ function desenharGrafico(wrap, vals) {
   svg.addEventListener("keydown", (ev) => {
     if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
     ev.preventDefault();
-    const i = Number(svg.dataset.i ?? pontos.length - 1) + (ev.key === "ArrowRight" ? 1 : -1);
-    mostrar(Math.min(pontos.length - 1, Math.max(0, i)));
+    const i = Number(svg.dataset.i ?? instantes.length - 1) + (ev.key === "ArrowRight" ? 1 : -1);
+    mostrar(Math.min(instantes.length - 1, Math.max(0, i)));
   });
   svg.addEventListener("blur", esconder);
 }
@@ -306,33 +343,45 @@ function desenharGrafico(wrap, vals) {
 function fato(rotulo, valor, sub) {
   return el("div", {}, el("dt", { text: rotulo }), el("dd", {}, document.createTextNode(valor), sub ? el("small", { text: sub }) : null));
 }
+const celula = (txt) => el("td", { text: txt });
 
 function montarCard(prod, hist) {
-  const vals = validos(hist);
-  const falhas = hist.length - vals.length;
+  const ofertas = prod.ofertas.map((o, i) => {
+    // aceita o formato antigo do histórico (chave = id do produto) até a primeira coleta nova
+    const h = hist[chaveOferta(prod, o)] || (prod.ofertas.length === 1 ? hist[prod.id] : null) || [];
+    return { o, h, vals: validos(h), cor: CORES[i % CORES.length], falhas: h.filter((r) => r.erro).length, suspeitas: h.filter((r) => r.suspeita).length };
+  });
+  const comDados = ofertas.filter((x) => x.vals.length);
+  const multi = prod.ofertas.length > 1;
   const card = el("article", { class: "card" });
-  card.append(el("div", { class: "card-head" },
-    el("div", {}, el("h2", { text: prod.nome }), el("div", { class: "store", text: prod.loja })),
-    el("a", { class: "btn", href: prod.url, target: "_blank", rel: "noopener", text: "Conferir na loja ↗" })));
 
-  if (!vals.length) {
+  const cab = el("div", { class: "card-head" },
+    el("div", {}, el("h2", { text: prod.nome }), el("div", { class: "store", text: multi ? `${prod.ofertas.length} lojas comparadas` : prod.ofertas[0].loja })));
+  if (!multi) cab.append(el("a", { class: "btn", href: prod.ofertas[0].url, target: "_blank", rel: "noopener", text: "Conferir na loja ↗" }));
+  card.append(cab);
+
+  if (!comDados.length) {
+    const falhas = ofertas.reduce((a, x) => a + x.falhas, 0);
     card.append(el("p", { class: "empty", text: "Ainda não há nenhuma leitura válida para este produto." + (falhas ? ` (${falhas} tentativa(s) com falha.)` : "") }));
     return card;
   }
 
-  const ult = vals[vals.length - 1], ant = vals[vals.length - 2];
-  const v = veredito(vals);
+  // oferta de destaque: a mais barata hoje
+  const ultimo = (x) => x.vals[x.vals.length - 1];
+  const destaque = comDados.reduce((a, b) => (melhor(ultimo(b)) < melhor(ultimo(a)) ? b : a));
+  const ult = ultimo(destaque), ant = destaque.vals[destaque.vals.length - 2];
+  const v = veredito(destaque.vals);
   const atual = melhor(ult);
+
   card.append(el("span", { class: "chip", text: v.rotulo }));
-  card.append(el("div", { class: "price-label", text: "Preço de referência (menor valor à vista)" }));
+  card.append(el("div", { class: "price-label", text: multi ? `Menor preço hoje · ${destaque.o.loja}` : "Preço de referência (menor valor à vista)" }));
   card.append(el("div", { class: "price", text: brl.format(atual) }));
   if (ant) {
     const d = atual - melhor(ant);
-    const txt = d === 0 ? "• sem mudança desde a leitura anterior" : `${d < 0 ? "▼ caiu" : "▲ subiu"} ${brl.format(Math.abs(d))} desde a leitura anterior`;
-    card.append(el("div", { class: "delta", text: txt }));
+    card.append(el("div", { class: "delta", text: d === 0 ? "• sem mudança desde a leitura anterior" : `${d < 0 ? "▼ caiu" : "▲ subiu"} ${brl.format(Math.abs(d))} desde a leitura anterior` }));
   }
 
-  const todos = vals.map(melhor);
+  const todos = destaque.vals.map(melhor);
   const minimo = Math.min(...todos), maximo = Math.max(...todos), media = todos.reduce((a, b) => a + b, 0) / todos.length;
   const facts = el("dl", { class: "facts" });
   facts.append(fato("À vista / Pix", ult.preco_pix ? brl.format(ult.preco_pix) : "Sem desconto à vista", ult.preco_pix ? "no Pix" : "a loja não informa preço menor à vista"));
@@ -346,21 +395,50 @@ function montarCard(prod, hist) {
     card.append(el("p", { class: "insight", text: extra > 0.5 ? `Parcelar custa ${brl.format(extra)} a mais do que pagar à vista.` : "Parcelar sem juros não custa a mais do que pagar à vista." }));
   }
 
-  card.append(el("div", { class: "chart-title", style: "margin-top:16px", text: `Histórico do menor valor à vista · ${v.base}` }));
+  // comparação entre lojas
+  if (multi) {
+    const tab = el("table");
+    tab.append(el("thead", {}, el("tr", {}, ...["Loja", "Preço", "Pix", "Parcelado", ""].map((t) => el("th", { text: t })))));
+    const corpo = el("tbody");
+    const ordenadas = [...ofertas].sort((a, b) => (a.vals.length ? melhor(ultimo(a)) : Infinity) - (b.vals.length ? melhor(ultimo(b)) : Infinity));
+    for (const x of ordenadas) {
+      const u = x.vals.length ? ultimo(x) : null;
+      const tr = el("tr", x === destaque ? { class: "best" } : {},
+        celula(x === destaque ? `🏅 ${x.o.loja}` : x.o.loja),
+        celula(u ? brl.format(u.preco_atual) : "sem leitura"),
+        celula(u && u.preco_pix ? brl.format(u.preco_pix) : "—"),
+        celula(u && u.parcelas_sem_juros ? `${u.parcelas_sem_juros}x ${brl.format(u.valor_parcela)}` : "—"),
+        el("td", {}, el("a", { href: x.o.url, target: "_blank", rel: "noopener", text: "Abrir ↗" })));
+      corpo.append(tr);
+    }
+    tab.append(corpo);
+    card.append(el("div", { class: "chart-title", text: "Comparação entre lojas (leitura mais recente)" }), el("div", { class: "compare" }, tab));
+  }
+
+  // gráfico
+  const nLeituras = comDados.reduce((a, x) => a + x.vals.length, 0);
+  card.append(el("div", { class: "chart-title", text: multi ? `Histórico do menor valor à vista, por loja · ${nLeituras} leituras` : `Histórico do menor valor à vista · ${v.base}` }));
+  if (comDados.length > 1) {
+    const lg = el("div", { class: "legend" });
+    for (const x of comDados) lg.append(el("span", {}, el("span", { class: "key", style: `border-color:${x.cor}` }), document.createTextNode(x.o.loja)));
+    card.append(lg);
+  }
+  const series = comDados.map((x) => ({ nome: x.o.loja, cor: x.cor, pts: x.vals.map((r) => ({ t: new Date(r.data).getTime(), v: melhor(r), r })) }));
   const wrap = el("div", { class: "chart-wrap" });
   card.append(wrap);
-  if (vals.length < 2) card.append(el("p", { class: "note", text: "O gráfico ganha forma a partir da 2ª leitura." }));
-  requestAnimationFrame(() => desenharGrafico(wrap, vals));
+  if (nLeituras < 2) card.append(el("p", { class: "note", text: "O gráfico ganha forma a partir da 2ª leitura." }));
+  requestAnimationFrame(() => desenharGrafico(wrap, series));
   let larg = 0;
-  new ResizeObserver(() => { if (wrap.clientWidth !== larg) { larg = wrap.clientWidth; desenharGrafico(wrap, vals); } }).observe(wrap);
+  new ResizeObserver(() => { if (wrap.clientWidth !== larg) { larg = wrap.clientWidth; desenharGrafico(wrap, series); } }).observe(wrap);
 
-  // visão em tabela
+  // tabela de leituras
+  const linhas = comDados.flatMap((x) => x.vals.map((r) => ({ loja: x.o.loja, r }))).sort((a, b) => (a.r.data < b.r.data ? 1 : -1)).slice(0, 40);
   const caixa = el("div", { class: "tablebox", hidden: "" });
   const tab = el("table");
-  tab.append(el("thead", {}, el("tr", {}, ...["Data", "Preço", "Pix", "Parcelado"].map((t) => el("th", { text: t })))));
+  tab.append(el("thead", {}, el("tr", {}, ...["Data", ...(multi ? ["Loja"] : []), "Preço", "Pix", "Parcelado"].map((t) => el("th", { text: t })))));
   const corpo = el("tbody");
-  for (const r of vals.slice(-40).reverse()) {
-    corpo.append(el("tr", {}, el("td", { text: fmtDataHora(r.data) }), el("td", { text: brl.format(r.preco_atual) }), el("td", { text: r.preco_pix ? brl.format(r.preco_pix) : "—" }), el("td", { text: r.parcelas_sem_juros ? `${r.parcelas_sem_juros}x ${brl.format(r.valor_parcela)}` : "—" })));
+  for (const { loja, r } of linhas) {
+    corpo.append(el("tr", {}, celula(fmtDataHora(r.data)), ...(multi ? [celula(loja)] : []), celula(brl.format(r.preco_atual)), celula(r.preco_pix ? brl.format(r.preco_pix) : "—"), celula(r.parcelas_sem_juros ? `${r.parcelas_sem_juros}x ${brl.format(r.valor_parcela)}` : "—")));
   }
   tab.append(corpo); caixa.append(tab);
   const btn = el("button", { class: "toggle", type: "button", "aria-expanded": "false", text: "Ver tabela de leituras" });
@@ -371,7 +449,10 @@ function montarCard(prod, hist) {
     btn.textContent = abrir ? "Ocultar tabela de leituras" : "Ver tabela de leituras";
   });
   card.append(btn, caixa);
+
+  const falhas = ofertas.reduce((a, x) => a + x.falhas, 0), susp = ofertas.reduce((a, x) => a + x.suspeitas, 0);
   if (falhas) card.append(el("p", { class: "note", text: `${falhas} tentativa(s) de leitura falharam e não entram nas contas.` }));
+  if (susp) card.append(el("p", { class: "note", text: `${susp} leitura(s) fora do padrão foram deixadas de fora por não terem sido confirmadas.` }));
   return card;
 }
 
@@ -385,7 +466,8 @@ async function iniciar() {
       document.getElementById("demo-banner").hidden = false;
       ({ produtos, hist } = dadosDemo());
     } else {
-      produtos = await buscarJSON(["products.json", RAW + "products.json"]);
+      const cfg = await buscarJSON(["products.json", RAW + "products.json"]);
+      produtos = cfg.produtos;
       try { hist = await buscarJSON([RAW + "data/history.json", "data/history.json"]); }
       catch { hist = {}; }
     }
@@ -396,6 +478,7 @@ async function iniciar() {
     return;
   }
 
+  const nOfertas = produtos.reduce((a, p) => a + p.ofertas.length, 0);
   if (!Object.keys(hist).length) {
     sub.textContent = `${produtos.length} produtos acompanhados`;
     app.className = "";
@@ -404,8 +487,8 @@ async function iniciar() {
   }
 
   const datas = Object.values(hist).flat().map((r) => r.data).sort();
-  sub.textContent = `${produtos.length} produtos acompanhados · última coleta em ${fmtDataHora(datas[datas.length - 1])}`;
-  for (const p of produtos) app.append(montarCard(p, hist[p.id] || []));
+  sub.textContent = `${produtos.length} produtos · ${nOfertas} ofertas acompanhadas · última coleta em ${fmtDataHora(datas[datas.length - 1])}`;
+  for (const p of produtos) app.append(montarCard(p, hist));
 }
 iniciar();
 </script>
