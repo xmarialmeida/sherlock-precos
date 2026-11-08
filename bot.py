@@ -18,7 +18,7 @@ import secrets
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -33,8 +33,18 @@ AJUDA = (
     "• Me mande o link de um produto e eu pergunto se ele é novo ou a mesma "
     "coisa que algo que você já acompanha em outra loja.\n"
     "• /lista mostra o que você acompanha.\n\n"
-    "Lojas que eu leio hoje: " + ", ".join(sorted(set(s.DOMINIOS.values()))) + "."
+    "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
+    "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja."
 )
+
+# parâmetros que só servem para rastrear cliques (podem ser removidos sem mudar o produto)
+PARAMS_RASTREIO = {
+    "gclid", "fbclid", "msclkid", "srsltid", "dclid", "yclid", "mc_cid", "mc_eid",
+    "ref", "ref_", "tag", "psc", "sr", "keywords", "qid", "pd_rd_r", "pd_rd_w", "pd_rd_wg",
+    "pf_rd_r", "pf_rd_p", "matt_tool", "matt_word", "matt_source", "matt_campaign",
+    "matt_adgroup", "matt_match_type", "matt_ad_type", "forceInstallment",
+}
+PREFIXOS_RASTREIO = ("utm_", "matt_", "gad_", "pd_rd_", "pf_rd_", "tracking", "wid", "polycard")
 
 
 # ---------- Telegram ----------
@@ -66,10 +76,16 @@ def responder(chat_id, texto, teclado=None):
 # ---------- utilitários ----------
 
 def limpar_url(url):
-    """Remove rastreamento (tudo depois do '?') e pontuação colada ao link."""
+    """Remove só o rastreamento do link, mantendo o que identifica o produto/vendedor
+    (ex.: seller_id, idsku, IdSku, idLojista). Também tira pontuação colada ao link."""
     url = url.rstrip(".,;:)>]}\"'")
     p = urlparse(url)
-    return f"{p.scheme}://{p.netloc}{p.path}"
+    mantidos = [
+        (k, v) for k, v in parse_qsl(p.query, keep_blank_values=True)
+        if k.lower() not in {x.lower() for x in PARAMS_RASTREIO}
+        and not k.lower().startswith(PREFIXOS_RASTREIO)
+    ]
+    return urlunparse((p.scheme, p.netloc, p.path, "", urlencode(mantidos), ""))
 
 
 def extrair_nome(html):
@@ -104,9 +120,7 @@ def iniciar_adicao(chat_id, url_bruta, produtos, estado):
     url = limpar_url(url_bruta)
     loja = s.loja_por_url(url)
     if not loja:
-        host = urlparse(url).hostname or "esse site"
-        suportadas = ", ".join(sorted(set(s.DOMINIOS.values())))
-        responder(chat_id, f"Ainda não sei ler preços de {host}. Lojas que eu leio hoje: {suportadas}.")
+        responder(chat_id, "Esse link não parece válido. Mande o endereço completo, começando com https://")
         return
     if url in todas_as_urls(produtos):
         responder(chat_id, "Esse link eu já acompanho. 👍")
@@ -116,9 +130,14 @@ def iniciar_adicao(chat_id, url_bruta, produtos, estado):
     if erro:
         responder(chat_id, f"Não consegui abrir esse link ({erro}). Tente de novo mais tarde.")
         return
-    dados = s.EXTRATORES[loja.lower()](html)
+    dados = s.EXTRATORES.get(loja.lower(), s.extrair_generico)(html)
     if not dados.get("preco_atual"):
-        responder(chat_id, "Abri a página, mas não encontrei o preço. Esse link parece não ser de um produto.")
+        resumo = "\n".join(s.inspecionar(html, max_valores=6))
+        responder(
+            chat_id,
+            f"Abri a página de {loja}, mas não consegui ler o preço com segurança "
+            "(não vou chutar um valor). Isso me ajuda a aprender essa loja:\n\n" + resumo[:3000],
+        )
         return
 
     nome = extrair_nome(html)
