@@ -16,8 +16,10 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -57,7 +59,9 @@ def formatar(valor):
 
 
 def slug(texto):
-    return re.sub(r"[^a-z0-9]+", "-", texto.lower()).strip("-")
+    """'Fogão Brastemp 4 bocas' -> 'fogao-brastemp-4-bocas' (sem acentos)."""
+    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]+", "-", sem_acento.lower()).strip("-")
 
 
 def chave_oferta(produto, oferta):
@@ -190,6 +194,18 @@ def extrair_brastemp(html):
 
 
 EXTRATORES = {"brastemp": extrair_brastemp}
+
+# Domínio -> nome da loja. Cada loja nova entra aqui e em EXTRATORES.
+DOMINIOS = {"brastemp.com.br": "Brastemp"}
+
+
+def loja_por_url(url):
+    """Devolve o nome da loja pelo endereço do link, ou None se não for suportada."""
+    host = (urlparse(url).hostname or "").lower()
+    for dominio, loja in DOMINIOS.items():
+        if host == dominio or host.endswith("." + dominio):
+            return loja
+    return None
 
 
 def baixar(url):
