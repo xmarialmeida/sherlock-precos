@@ -31,6 +31,14 @@
    "parcelas_sem_juros": 10,
    "valor_parcela": 436.8,
    "total_parcelado": 4368.0
+  },
+  {
+   "data": "2026-11-08T00:38-03:00",
+   "preco_atual": 4368.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 436.8,
+   "total_parcelado": 4368.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -69,6 +77,15 @@
    "parcelas_sem_juros": 10,
    "valor_parcela": 196.7,
    "total_parcelado": 1967.0
+  },
+  {
+   "data": "2026-11-08T00:38-03:00",
+   "preco_atual": 1868.65,
+   "preco_pix": 1868.65,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 196.7,
+   "total_parcelado": 1967.0,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -80,6 +97,13 @@
    "parcelas_sem_juros": 3,
    "valor_parcela": 188.17,
    "total_parcelado": 564.51
+  }
+ ],
+ "geladeira-brastemp-bre66ak@fast-shop": [
+  {
+   "data": "2026-11-08T00:38-03:00",
+   "preco_atual": 3689.0,
+   "preco_pix": 3689.0
   }
  ]
 }
