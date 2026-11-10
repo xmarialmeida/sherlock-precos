@@ -71,6 +71,14 @@
    "valor_parcela": 455.9,
    "total_parcelado": 4559.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-10T15:39-03:00",
+   "preco_atual": 4429.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 442.9,
+   "total_parcelado": 4429.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -154,6 +162,15 @@
    "valor_parcela": 197.3,
    "total_parcelado": 1973.0,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-10T15:39-03:00",
+   "preco_atual": 1874.35,
+   "preco_pix": 1874.35,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 197.3,
+   "total_parcelado": 1973.0,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -190,6 +207,11 @@
   },
   {
    "data": "2026-11-10T01:37-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-10T15:39-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
   }
