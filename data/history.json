@@ -119,6 +119,14 @@
    "valor_parcela": 429.9,
    "total_parcelado": 4299.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-13T15:30-03:00",
+   "preco_atual": 4199.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 419.9,
+   "total_parcelado": 4199.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -256,6 +264,15 @@
    "valor_parcela": 250.75,
    "total_parcelado": 2006.0,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-13T15:31-03:00",
+   "preco_atual": 1905.7,
+   "preco_pix": 1905.7,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 250.75,
+   "total_parcelado": 2006.0,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -324,6 +341,11 @@
    "data": "2026-11-13T00:24-03:00",
    "preco_atual": 4199.0,
    "preco_pix": 4199.0
+  },
+  {
+   "data": "2026-11-13T15:30-03:00",
+   "preco_atual": 4199.0,
+   "preco_pix": 4199.0
   }
  ],
  "geladeira-brastemp-bre66ak@magazine-luiza": [
@@ -337,6 +359,10 @@
   {
    "data": "2026-11-13T00:24-03:00",
    "erro": "HTTP 403, e o serviço falhou (serviço: HTTP 500)"
+  },
+  {
+   "data": "2026-11-13T15:30-03:00",
+   "erro": "HTTP 403, e o serviço falhou (serviço: HTTP 500)"
   }
  ],
  "lg-thinq-vc4-lava-e-seca-inox-look-frontal-14-kg-60-x-66-x-8@amazon": [
@@ -349,6 +375,13 @@
   },
   {
    "data": "2026-11-13T00:25-03:00",
+   "preco_atual": 5249.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 437.49,
+   "total_parcelado": 5249.88
+  },
+  {
+   "data": "2026-11-13T15:31-03:00",
    "preco_atual": 5249.0,
    "parcelas_sem_juros": 12,
    "valor_parcela": 437.49,
