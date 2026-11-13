@@ -258,8 +258,44 @@ def extrair_brastemp(html):
     return dados
 
 
+def extrair_amazon(html):
+    """Amazon: o preço fica em blocos próprios da página (não usa o formato padrão)."""
+    soup = BeautifulSoup(html, "html.parser")
+    preco = None
+    campo = soup.select_one("input#twister-plus-price-data-price")
+    if campo and campo.get("value"):
+        preco = numero(campo["value"])
+    if not preco:
+        for seletor in (
+            "#corePriceDisplay_desktop_feature_div .a-price .a-offscreen",
+            "#corePrice_feature_div .a-price .a-offscreen",
+            "#corePrice_desktop .a-price .a-offscreen",
+            "#apex_desktop .a-price .a-offscreen",
+            "#priceblock_dealprice",
+            "#priceblock_ourprice",
+        ):
+            tag = soup.select_one(seletor)
+            if tag and "," in tag.get_text():
+                preco = numero(tag.get_text())
+                if preco:
+                    break
+    if not preco:
+        m = re.search(r'"priceAmount"\s*:\s*([0-9]+(?:\.[0-9]+)?)', html)
+        preco = numero(m.group(1)) if m else None
+    if not preco:
+        return {}
+    dados = {"preco_atual": preco}
+    de = soup.select_one(".basisPrice .a-offscreen")
+    if de and "," in de.get_text():
+        v = numero(de.get_text())
+        if v and v > preco:
+            dados["preco_original"] = v
+    ler_pagamento(soup.get_text(" ", strip=True), dados)
+    return dados
+
+
 # Lojas com leitor específico. Todas as outras usam o leitor genérico.
-EXTRATORES = {"brastemp": extrair_brastemp}
+EXTRATORES = {"brastemp": extrair_brastemp, "amazon": extrair_amazon}
 
 # Nomes bonitos para lojas conhecidas. Qualquer outro site recebe o nome do domínio.
 NOMES_LOJAS = {
@@ -270,6 +306,8 @@ NOMES_LOJAS = {
     "casasbahia.com.br": "Casas Bahia",
     "kabum.com.br": "KaBuM",
     "amazon.com.br": "Amazon",
+    "a.co": "Amazon",          # atalho do botão "compartilhar" da Amazon
+    "amzn.to": "Amazon",
     "shopee.com.br": "Shopee",
     "carrefour.com.br": "Carrefour",
 }
@@ -313,6 +351,20 @@ def baixar_via_servico(url):
         print("  (lido via serviço de leitura: 1+ crédito gasto)")
         return r.text, None
     return None, f"serviço: HTTP {r.status_code}"
+
+
+def endereco_definitivo(url, html):
+    """Links de atalho (a.co, amzn.to) mudam de destino; guardamos o endereço real.
+    Na Amazon, o endereço fica reduzido ao código do produto (ASIN)."""
+    host = (urlparse(url).hostname or "").lower()
+    if host in ("a.co", "amzn.to") and html:
+        tag = BeautifulSoup(html, "html.parser").find("link", rel="canonical")
+        if tag and tag.get("href"):
+            url = tag["href"]
+    m = re.search(r"/(?:dp|gp/product)/([A-Z0-9]{10})", url)
+    if m and "amazon." in (urlparse(url).hostname or ""):
+        return f"https://www.amazon.com.br/dp/{m.group(1)}"
+    return url
 
 
 def baixar(url):
