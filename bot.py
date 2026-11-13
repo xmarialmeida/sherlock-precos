@@ -38,7 +38,8 @@ AJUDA = (
     "coisa que algo que você já acompanha em outra loja.\n"
     "• /lista mostra o que você acompanha.\n\n"
     "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
-    "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja."
+    "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja.\n\n"
+    "Não consigo ler: Mercado Livre (bloqueia o robô)."
 )
 
 # parâmetros que só servem para rastrear cliques (podem ser removidos sem mudar o produto)
@@ -122,11 +123,7 @@ def todas_as_urls(produtos):
 
 def ler_oferta(url, loja):
     """Abre a página e devolve (html, dados, erro)."""
-    html, erro = s.baixar(url)
-    if erro:
-        return None, {}, erro
-    dados = s.EXTRATORES.get(loja.lower(), s.extrair_generico)(html)
-    return html, dados, None
+    return s.ler_pagina(url, loja)
 
 
 # ---------- ações ----------
@@ -136,6 +133,10 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
     loja = s.loja_por_url(url)
     if not loja:
         responder(chat_id, "Esse link não parece válido. Mande o endereço completo, começando com https://")
+        return
+    if loja in s.LOJAS_NAO_LIDAS:
+        responder(chat_id, f"🚫 O {loja} bloqueia o robô, então não consigo acompanhar preços de lá. "
+                           "Para produtos dessa loja, a conferência precisa ser manual.")
         return
     if url in todas_as_urls(produtos):
         responder(chat_id, "Esse link eu já acompanho. 👍")
