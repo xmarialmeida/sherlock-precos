@@ -303,6 +303,8 @@ NOMES_LOJAS = {
     "fastshop.com.br": "Fast Shop",
     "magazineluiza.com.br": "Magazine Luiza",
     "mercadolivre.com.br": "Mercado Livre",
+    "mercadolivre.com": "Mercado Livre",   # atalhos mercadolivre.com/sec/...
+    "meli.la": "Mercado Livre",            # atalho do botão "compartilhar" do ML
     "casasbahia.com.br": "Casas Bahia",
     "kabum.com.br": "KaBuM",
     "amazon.com.br": "Amazon",
@@ -353,14 +355,25 @@ def baixar_via_servico(url):
     return None, f"serviço: HTTP {r.status_code}"
 
 
+# Lojas que bloqueiam o robô e que decidimos não acompanhar (para não gastar créditos).
+LOJAS_NAO_LIDAS = {"Mercado Livre"}
+
+ATALHOS = {"a.co", "amzn.to", "meli.la", "mercadolivre.com"}
+
+
 def endereco_definitivo(url, html):
     """Links de atalho (a.co, amzn.to) mudam de destino; guardamos o endereço real.
     Na Amazon, o endereço fica reduzido ao código do produto (ASIN)."""
     host = (urlparse(url).hostname or "").lower()
-    if host in ("a.co", "amzn.to") and html:
-        tag = BeautifulSoup(html, "html.parser").find("link", rel="canonical")
-        if tag and tag.get("href"):
+    if host in ATALHOS:
+        tag = BeautifulSoup(html or "", "html.parser").find("link", rel="canonical")
+        if tag and tag.get("href", "").startswith("http"):
             url = tag["href"]
+        elif getattr(baixar, "url_final", None):
+            url = baixar.url_final
+        if "mercadolivre.com.br" in (urlparse(url).hostname or ""):
+            p = urlparse(url)
+            url = f"{p.scheme}://{p.netloc}{p.path}"  # tira o rastreamento do ML
     m = re.search(r"/(?:dp|gp/product)/([A-Z0-9]{10})", url)
     if m and "amazon." in (urlparse(url).hostname or ""):
         return f"https://www.amazon.com.br/dp/{m.group(1)}"
@@ -368,12 +381,14 @@ def endereco_definitivo(url, html):
 
 
 def baixar(url):
+    baixar.url_final = None
     ultimo_erro = "falha desconhecida"
     bloqueado = False
     for tentativa in range(3):
         try:
             r = requests.get(url, headers=HEADERS, timeout=30)
             if r.status_code == 200:
+                baixar.url_final = r.url
                 return r.text, None
             ultimo_erro = f"HTTP {r.status_code}"
             if r.status_code in BLOQUEIOS:
@@ -391,6 +406,25 @@ def baixar(url):
     return None, ultimo_erro
 
 
+def ler_pagina(url, loja):
+    """Baixa e lê o preço. Se a página veio sem preço (ex.: tela de verificação anti-robô),
+    tenta uma segunda vez pelo serviço de leitura. Devolve (html, dados, erro)."""
+    extrator = EXTRATORES.get((loja or "").lower(), extrair_generico)
+    html, erro = baixar(url)
+    if erro:
+        return None, {}, erro
+    dados = extrator(html)
+    if not dados.get("preco_atual") and os.environ.get("SCRAPERAPI_KEY"):
+        url_final = baixar.url_final
+        html2, erro2 = baixar_via_servico(url_final or url)
+        if html2:
+            dados2 = extrator(html2)
+            if dados2.get("preco_atual"):
+                baixar.url_final = url_final
+                return html2, dados2, None
+    return html, dados, None
+
+
 def inspecionar(html, max_valores=8):
     """Resume o que o robô enxerga na página (para diagnóstico, em linhas de texto)."""
     soup = BeautifulSoup(html, "html.parser")
@@ -398,6 +432,8 @@ def inspecionar(html, max_valores=8):
     linhas = []
     titulo = soup.title.get_text().strip()[:90] if soup.title else "(sem título)"
     linhas.append(f"título da página: {titulo}")
+    if getattr(baixar, "url_final", None):
+        linhas.append(f"endereço que abriu: {baixar.url_final[:120]}")
     meta = preco_da_meta(soup)
     linhas.append(f"meta de preço: {formatar(meta) if meta else 'não encontrada'}")
     ld = precos_jsonld(soup)
@@ -429,19 +465,15 @@ def diagnostico(rotulo, html):
 
 def coletar(oferta, rotulo):
     agora = datetime.now(FUSO).isoformat(timespec="minutes")
-    extrator = EXTRATORES.get(oferta["loja"].lower(), extrair_generico)
-
-    html, erro = baixar(oferta["url"])
+    if oferta["loja"] in LOJAS_NAO_LIDAS:
+        return {"data": agora, "erro": f"{oferta['loja']} não pode ser lido pelo robô"}
+    html, dados, erro = ler_pagina(oferta["url"], oferta["loja"])
     if erro:
         return {"data": agora, "erro": erro}
-
     if os.environ.get("DEBUG") == "1":
         diagnostico(rotulo, html)
-
-    dados = extrator(html)
     if not dados.get("preco_atual"):
         return {"data": agora, "erro": "preço não encontrado na página"}
-
     return {"data": agora, **dados}
 
 
