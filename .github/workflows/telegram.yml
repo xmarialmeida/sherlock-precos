@@ -1,17 +1,15 @@
 name: Ouvir Telegram
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # confere novas mensagens a cada ~15 minutos
-  workflow_dispatch: # permite rodar manualmente
+  workflow_dispatch: # acionado na hora pelo "porteiro" (worker.js) ou manualmente
+    inputs:
+      atualizacao:
+        description: "Mensagem entregue pelo porteiro (deixe vazio ao rodar manualmente)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
-
-# garante que o bot e o coletor de preços nunca gravem os mesmos arquivos ao mesmo tempo
-concurrency:
-  group: rastreador-dados
-  cancel-in-progress: false
 
 jobs:
   ouvir:
@@ -26,16 +24,24 @@ jobs:
       - name: Instalar dependências
         run: pip install requests beautifulsoup4
 
-      - name: Rodar o bot
+      - name: Rodar o bot e salvar
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
-        run: python bot.py
-
-      - name: Salvar alterações
+          ATUALIZACAO: ${{ inputs.atualizacao }}
         run: |
           git config user.name "rastreador-bot"
           git config user.email "rastreador-bot@users.noreply.github.com"
-          git add products.json data/history.json data/bot_state.json
-          git diff --staged --quiet || (git commit -m "Bot: atualiza produtos" && git pull --rebase && git push)
+          # Se outro processo gravar no mesmo instante, pega a versão nova e refaz.
+          for tentativa in 1 2 3 4; do
+            python bot.py
+            git add -A products.json data
+            if git diff --staged --quiet; then exit 0; fi
+            git commit -m "Bot: atualiza produtos"
+            if git push; then exit 0; fi
+            echo "Outro processo gravou ao mesmo tempo; refazendo (tentativa $tentativa)..."
+            git fetch origin main
+            git reset --hard origin/main
+          done
+          exit 1
