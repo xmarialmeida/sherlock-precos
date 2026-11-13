@@ -291,17 +291,51 @@ def loja_por_url(url):
     return base.capitalize()
 
 
+BLOQUEIOS = (403, 429, 503)  # respostas típicas de "não quero robô"
+
+
+def baixar_via_servico(url):
+    """Pede a página a um serviço de leitura (ScraperAPI), que acessa por outro caminho.
+    Só é usado quando a loja bloqueia o acesso direto e a chave SCRAPERAPI_KEY existe."""
+    chave = os.environ.get("SCRAPERAPI_KEY")
+    if not chave:
+        return None, "sem chave do serviço"
+    params = {"api_key": chave, "url": url}
+    pais = os.environ.get("SCRAPERAPI_PAIS")  # opcional; planos pagos permitem "br"
+    if pais:
+        params["country_code"] = pais
+    try:
+        r = requests.get("https://api.scraperapi.com/", params=params, timeout=75)
+    except requests.RequestException as e:
+        # só o tipo do erro: a mensagem completa poderia conter a chave
+        return None, f"serviço: {type(e).__name__}"
+    if r.status_code == 200:
+        print("  (lido via serviço de leitura: 1+ crédito gasto)")
+        return r.text, None
+    return None, f"serviço: HTTP {r.status_code}"
+
+
 def baixar(url):
     ultimo_erro = "falha desconhecida"
+    bloqueado = False
     for tentativa in range(3):
         try:
             r = requests.get(url, headers=HEADERS, timeout=30)
             if r.status_code == 200:
                 return r.text, None
             ultimo_erro = f"HTTP {r.status_code}"
+            if r.status_code in BLOQUEIOS:
+                bloqueado = True
+                break  # insistir não adianta; passa para o serviço
         except requests.RequestException as e:
             ultimo_erro = type(e).__name__
         time.sleep(3 * (tentativa + 1))
+
+    if bloqueado and os.environ.get("SCRAPERAPI_KEY"):
+        html, erro_servico = baixar_via_servico(url)
+        if html:
+            return html, None
+        return None, f"{ultimo_erro}, e o serviço falhou ({erro_servico})"
     return None, ultimo_erro
 
 
