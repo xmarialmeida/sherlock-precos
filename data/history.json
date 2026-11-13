@@ -303,5 +303,14 @@
    "preco_atual": 4359.0,
    "preco_pix": 4359.0
   }
+ ],
+ "geladeira-brastemp-bre66ak@magazine-luiza": [
+  {
+   "data": "2026-11-12T23:23-03:00",
+   "preco_atual": 4258.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 448.21,
+   "total_parcelado": 4482.1
+  }
  ]
 }
