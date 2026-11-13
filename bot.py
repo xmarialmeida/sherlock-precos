@@ -142,6 +142,11 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
         return
 
     html, dados, erro = ler_oferta(url, loja)
+    if not erro:
+        url = s.endereco_definitivo(url, html)
+        if url in todas_as_urls(produtos):
+            responder(chat_id, "Esse produto eu já acompanho. 👍")
+            return
     if erro:
         responder(chat_id, f"Não consegui abrir esse link de {loja} ({erro}). "
                            "A loja pode estar bloqueando o robô.")
