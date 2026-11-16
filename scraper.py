@@ -19,7 +19,7 @@ import time
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -294,8 +294,86 @@ def extrair_amazon(html):
     return dados
 
 
+def extrair_buscape(html):
+    """Buscapé (comparador): lê a lista de ofertas por loja que a página traz embutida
+    e devolve o menor preço à vista, dizendo de qual loja ele é."""
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("script", id="__NEXT_DATA__")
+    if not tag:
+        return {}
+    try:
+        dados = json.loads(tag.string or tag.get_text())
+        ofertas = dados["props"]["initialReduxState"]["offers"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    lista = ofertas.get("offerList") or ofertas.get("displayOffers") or []
+    # a "melhor oferta" segundo o próprio Buscapé entra junto: ela pode não estar
+    # entre as primeiras ofertas que a página carrega
+    if isinstance(ofertas.get("bestOffer"), dict):
+        lista = [ofertas["bestOffer"]] + list(lista)
+
+    por_loja = {}
+    for o in lista:
+        preco = numero(o.get("price")) if o.get("price") is not None else None
+        loja = (o.get("sellerName") or "").strip()
+        if not preco or not loja:
+            continue
+        item = {"loja": loja, "preco": preco}
+        parcelas = o.get("numParcels")
+        if parcelas and parcelas > 1 and o.get("parcelValue"):
+            item["parcelas"] = int(parcelas)
+            item["valor_parcela"] = round(float(o["parcelValue"]), 2)
+            item["total_parcelado"] = round(float(o.get("totalParceledValue") or parcelas * o["parcelValue"]), 2)
+            item["com_juros"] = bool(o.get("hasInterest")) and item["total_parcelado"] > preco + 0.5
+        if loja not in por_loja or preco < por_loja[loja]["preco"]:
+            por_loja[loja] = item
+    if not por_loja:
+        return {}
+
+    ranking = sorted(por_loja.values(), key=lambda x: x["preco"])
+    melhor = ranking[0]
+    resultado = {"preco_atual": melhor["preco"], "loja_destaque": melhor["loja"], "comparador": ranking[:8]}
+    if melhor.get("parcelas"):
+        if melhor["com_juros"]:
+            resultado["parcelado_com_juros"] = f"{melhor['parcelas']}x de {formatar(melhor['valor_parcela'])} (total {formatar(melhor['total_parcelado'])})"
+        else:
+            resultado["parcelas_sem_juros"] = melhor["parcelas"]
+            resultado["valor_parcela"] = melhor["valor_parcela"]
+            resultado["total_parcelado"] = melhor["total_parcelado"]
+    return resultado
+
+
+def buscar_buscape(termo, maximo=5):
+    """Procura um produto no Buscapé pelo nome ou código do modelo.
+    Devolve (lista de {nome, preco, lojas, melhor_loja, url}, erro)."""
+    html, erro = baixar("https://www.buscape.com.br/search?q=" + quote_plus(termo))
+    if erro:
+        return [], erro
+    tag = BeautifulSoup(html, "html.parser").find("script", id="__NEXT_DATA__")
+    try:
+        achados = json.loads(tag.string or tag.get_text())["props"]["initialReduxState"]["hits"]["hits"]
+    except (AttributeError, ValueError, KeyError, TypeError):
+        return [], "não entendi a página de busca"
+    resultados = []
+    for h in achados:
+        caminho = h.get("url") or ""
+        # só páginas de produto (as que comparam lojas); anúncios avulsos ficam de fora
+        if h.get("type") != "product" or not caminho.startswith("/") or caminho.startswith("/lead"):
+            continue
+        resultados.append({
+            "nome": " ".join(str(h.get("name") or "").split())[:110],
+            "preco": numero(h["price"]) if h.get("price") else None,
+            "lojas": h.get("storeCount") or 0,
+            "melhor_loja": (h.get("bestOffer") or {}).get("merchantName"),
+            "url": "https://www.buscape.com.br" + caminho.split("?")[0],
+        })
+        if len(resultados) >= maximo:
+            break
+    return resultados, None
+
+
 # Lojas com leitor específico. Todas as outras usam o leitor genérico.
-EXTRATORES = {"brastemp": extrair_brastemp, "amazon": extrair_amazon}
+EXTRATORES = {"brastemp": extrair_brastemp, "amazon": extrair_amazon, "buscapé": extrair_buscape}
 
 # Nomes bonitos para lojas conhecidas. Qualquer outro site recebe o nome do domínio.
 NOMES_LOJAS = {
@@ -312,6 +390,7 @@ NOMES_LOJAS = {
     "amzn.to": "Amazon",
     "shopee.com.br": "Shopee",
     "carrefour.com.br": "Carrefour",
+    "buscape.com.br": "Buscapé",
 }
 
 
@@ -505,11 +584,16 @@ def linha_oferta(oferta, reg):
         return f"  {oferta['loja']}: ⚠️ sem leitura ({reg['erro']})"
     if reg.get("suspeita"):
         return f"  {oferta['loja']}: {formatar(reg['preco_atual'])} (a confirmar)"
-    partes = [f"  {oferta['loja']}: {formatar(reg['preco_atual'])}"]
+    rotulo = oferta["loja"]
+    if reg.get("loja_destaque"):
+        rotulo += f" (melhor: {reg['loja_destaque']})"
+    partes = [f"  {rotulo}: {formatar(reg['preco_atual'])}"]
     if reg.get("preco_pix"):
         partes.append(f"Pix {formatar(reg['preco_pix'])}")
     if reg.get("parcelas_sem_juros"):
         partes.append(f"{reg['parcelas_sem_juros']}x de {formatar(reg['valor_parcela'])} s/ juros")
+    elif reg.get("parcelado_com_juros"):
+        partes.append(f"parcelado com juros: {reg['parcelado_com_juros']}")
     return " · ".join(partes)
 
 
