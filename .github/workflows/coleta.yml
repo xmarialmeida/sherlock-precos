@@ -2,9 +2,15 @@ name: Coletar preços
 
 on:
   schedule:
-    # 11:17 e 23:17 UTC = 08:17 e 20:17 no horário de Brasília
+    # reserva: o horário principal vem do relógio da Cloudflare (worker.js)
+    # 11:17 e 23:17 UTC = 08:17 e 20:17 no horário de Brasília (o GitHub costuma atrasar horas)
     - cron: "17 11,23 * * *"
-  workflow_dispatch: # permite rodar manualmente pelo botão "Run workflow"
+  workflow_dispatch: # manual (botão "Run workflow") ou pelo relógio da Cloudflare
+    inputs:
+      automatico:
+        description: "Deixe 'nao' ao rodar manualmente (manda o resumo completo no Telegram)"
+        required: false
+        default: "nao"
 
 permissions:
   contents: write # necessário para o robô salvar o histórico no repositório
@@ -32,8 +38,8 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
-          ENVIAR_RESUMO: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
-          DEBUG: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+          ENVIAR_RESUMO: ${{ github.event_name == 'workflow_dispatch' && inputs.automatico != 'sim' && '1' || '0' }}
+          DEBUG: ${{ github.event_name == 'workflow_dispatch' && inputs.automatico != 'sim' && '1' || '0' }}
         run: python scraper.py
 
       - name: Salvar histórico
