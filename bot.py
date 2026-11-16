@@ -36,16 +36,21 @@ AJUDA = (
     "👋 Eu acompanho preços para você.\n\n"
     "• Me mande o link de um produto e eu pergunto se ele é novo ou a mesma "
     "coisa que algo que você já acompanha em outra loja.\n"
+    "• Ou escreva o nome ou o código do modelo (ex.: BRE66AK) e eu procuro no Buscapé "
+    "para você escolher.\n"
     "• /lista mostra o que você acompanha.\n\n"
     "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
     "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja.\n\n"
-    "Não consigo ler: Mercado Livre (bloqueia o robô)."
+    "Não consigo ler: Mercado Livre (bloqueia o robô).\n"
+    "Dica: um link de produto do Buscapé traz o preço de várias lojas de uma vez "
+    "(inclusive Magalu, Americanas e outras que bloqueiam o robô)."
 )
 
 # parâmetros que só servem para rastrear cliques (podem ser removidos sem mudar o produto)
 PARAMS_RASTREIO = {
     "gclid", "fbclid", "msclkid", "srsltid", "dclid", "yclid", "mc_cid", "mc_eid",
     "ref", "ref_", "tag", "psc", "sr", "keywords", "qid", "forceinstallment",
+    "_lc", "experiencevariant", "searchterm",
 }
 PREFIXOS_RASTREIO = ("utm_", "matt_", "gad_", "pd_rd_", "pf_rd_", "tracking", "wid", "polycard")
 
@@ -97,6 +102,7 @@ def extrair_nome(html):
         soup.title.get_text() if soup.title else ""
     )
     titulo = re.split(r"\s+\|\s+", " ".join(titulo.split()))[0].strip()
+    titulo = re.sub(r"\s+(em Promoção|com menor preço)\s+é no Buscapé$", "", titulo, flags=re.I)
     return (titulo or "Produto novo")[:120]
 
 
@@ -133,6 +139,10 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
     loja = s.loja_por_url(url)
     if not loja:
         responder(chat_id, "Esse link não parece válido. Mande o endereço completo, começando com https://")
+        return
+    if loja == "Buscapé" and re.search(r"/(search|busca)\b", urlparse(url).path):
+        responder(chat_id, "Esse é um link de busca do Buscapé. Toque no produto e me mande o link "
+                           "da página dele (a que diz “Compare preços em N lojas”).")
         return
     if loja in s.LOJAS_NAO_LIDAS:
         responder(chat_id, f"🚫 O {loja} bloqueia o robô, então não consigo acompanhar preços de lá. "
@@ -171,9 +181,41 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
     # então não é preciso guardar nada entre uma execução e outra.
     responder(
         chat_id,
-        f"Encontrei:\n{nome}\nLoja: {loja} · {s.formatar(s.melhor_preco(dados))}\nLink: {url}\n\n"
+        f"Encontrei:\n{nome}\nLoja: {loja} · {s.formatar(s.melhor_preco(dados))}"
+        + (f" (melhor: {dados['loja_destaque']})" if dados.get("loja_destaque") else "")
+        + f"\nLink: {url}\n\n"
         "Esse link é o MESMO produto (mesma versão e voltagem) de algum que você já acompanha, "
         "ou é um produto novo?",
+        teclado,
+    )
+
+
+SAUDACOES = {"oi", "ola", "olá", "ajuda", "help", "menu", "bom dia", "boa tarde", "boa noite", "obrigada", "obrigado"}
+
+
+def buscar(chat_id, termo):
+    """Procura no Buscapé e mostra os resultados para você escolher o produto certo."""
+    resultados, erro = s.buscar_buscape(termo)
+    if erro:
+        responder(chat_id, f"Não consegui buscar no Buscapé agora ({erro}). "
+                           "Tente de novo em instantes ou me mande o link do produto.")
+        return
+    if not resultados:
+        responder(chat_id, f"Não achei “{termo}” no Buscapé. Tente só o código do modelo "
+                           "(ex.: BRE66AK) ou me mande o link do produto.")
+        return
+    blocos = []
+    for i, r in enumerate(resultados, 1):
+        detalhe = f"a partir de {s.formatar(r['preco'])}" if r["preco"] else "sem preço agora"
+        if r["lojas"]:
+            detalhe += f" · {r['lojas']} loja(s)"
+        blocos.append(f"{i}. {r['nome']}\n   {detalhe}\n   {r['url']}")
+    teclado = [[{"text": str(i), "callback_data": f"b:{i}"} for i in range(1, len(resultados) + 1)],
+               [{"text": "✖ Nenhum desses", "callback_data": "c"}]]
+    responder(
+        chat_id,
+        f"🔎 Achei no Buscapé para “{termo}”:\n\n" + "\n\n".join(blocos)
+        + "\n\nConfira modelo, voltagem e cor, e toque no número do produto certo.",
         teclado,
     )
 
@@ -190,6 +232,16 @@ def concluir(chat_id, msg_id, acao_bruta, texto_msg, produtos, historico, cb_id=
     acao = partes[0]
     if acao == "c":
         finalizar("Cancelado. Nada foi adicionado.")
+        return False
+
+    if acao == "b":  # escolheu um resultado da busca: segue o mesmo caminho de um link
+        itens = re.findall(r"^(\d+)\. (.+)\n.*\n\s+(https://\S+)$", texto_msg or "", re.M)
+        escolhido = next((i for i in itens if len(partes) == 2 and i[0] == partes[1]), None)
+        if not escolhido:
+            finalizar("Não encontrei esse resultado. Faça a busca de novo, por favor.")
+            return False
+        finalizar(f"Escolhido: {escolhido[1]}\nLendo as ofertas…")
+        iniciar_adicao(chat_id, escolhido[2], produtos)
         return False
 
     m_url = re.search(r"^Link: (\S+)$", texto_msg or "", re.M)
@@ -258,6 +310,11 @@ def tratar_mensagem(chat_id, texto, produtos, historico):
     elif links:
         for link in links:
             iniciar_adicao(chat_id, link, produtos)
+    elif texto.startswith("/buscar"):
+        termo = texto[len("/buscar"):].strip()
+        buscar(chat_id, termo) if len(termo) >= 3 else responder(chat_id, "Escreva o que procurar. Ex.: /buscar BRE66AK")
+    elif not texto.startswith("/") and len(texto.strip()) >= 3 and texto.strip().lower().rstrip("!.?") not in SAUDACOES:
+        buscar(chat_id, texto.strip()[:80])
     else:
         responder(chat_id, AJUDA)
 
