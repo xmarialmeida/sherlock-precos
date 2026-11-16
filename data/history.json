@@ -594,5 +594,43 @@
    "data": "2026-11-16T20:20-03:00",
    "preco_atual": 3989.0
   }
+ ],
+ "fogao-brastemp-byo4ebr@buscape": [
+  {
+   "data": "2026-11-16T20:46-03:00",
+   "preco_atual": 1694.8,
+   "loja_destaque": "Webcontinental",
+   "comparador": [
+    {
+     "loja": "Webcontinental",
+     "preco": 1694.8,
+     "parcelas": 8,
+     "valor_parcela": 218.54,
+     "total_parcelado": 1748.32,
+     "com_juros": true
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1759.0
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1800.57,
+     "parcelas": 10,
+     "valor_parcela": 193.61,
+     "total_parcelado": 1936.1,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 218,54 (total R$ 1.748,32)"
+  }
  ]
 }
