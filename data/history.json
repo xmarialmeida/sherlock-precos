@@ -1857,5 +1857,26 @@
    "valor_parcela": 49.99,
    "total_parcelado": 599.88
   }
+ ],
+ "amazon@buscape": [
+  {
+   "data": "2026-11-17T17:52-03:00",
+   "preco_atual": 539.1,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 539.1
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 899.0,
+     "parcelas": 8,
+     "valor_parcela": 112.37,
+     "total_parcelado": 898.96,
+     "com_juros": false
+    }
+   ]
+  }
  ]
 }
