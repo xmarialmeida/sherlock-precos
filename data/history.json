@@ -271,6 +271,14 @@
    "valor_parcela": 427.8,
    "total_parcelado": 4278.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "preco_atual": 4278.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 427.8,
+   "total_parcelado": 4278.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -579,6 +587,15 @@
    "valor_parcela": 256.25,
    "total_parcelado": 2050.0,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "preco_atual": 1947.5,
+   "preco_pix": 1947.5,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 256.25,
+   "total_parcelado": 2050.0,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -740,6 +757,11 @@
   },
   {
    "data": "2026-11-17T17:08-03:00",
+   "preco_atual": 4349.0,
+   "preco_pix": 4349.0
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
    "preco_atual": 4349.0,
    "preco_pix": 4349.0
   }
@@ -908,6 +930,10 @@
   {
    "data": "2026-11-17T17:08-03:00",
    "erro": "preço não encontrado na página"
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "erro": "preço não encontrado na página"
   }
  ],
  "geladeira-brastemp-bre66ak@buscape": [
@@ -961,6 +987,10 @@
   },
   {
    "data": "2026-11-17T17:08-03:00",
+   "preco_atual": 3999.01
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
    "preco_atual": 3999.01
   }
  ],
@@ -1444,6 +1474,41 @@
     }
    ],
    "parcelado_com_juros": "8x de R$ 229,37 (total R$ 1.834,96)"
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "preco_atual": 1769.0,
+   "loja_destaque": "Fast Shop",
+   "comparador": [
+    {
+     "loja": "Fast Shop",
+     "preco": 1769.0
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1791.7,
+     "parcelas": 8,
+     "valor_parcela": 235.75,
+     "total_parcelado": 1886.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1803.84,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    }
+   ]
   }
  ],
  "lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox@buscape": [
@@ -1846,6 +1911,46 @@
     }
    ],
    "parcelado_com_juros": "10x de R$ 494,90 (total R$ 4.949,00)"
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "preco_atual": 4701.55,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 4701.55,
+     "parcelas": 10,
+     "valor_parcela": 494.9,
+     "total_parcelado": 4949.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Loja Online LG",
+     "preco": 4844.05
+    },
+    {
+     "loja": "Amazon",
+     "preco": 5199.0
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 5524.15,
+     "parcelas": 6,
+     "valor_parcela": 1083.17,
+     "total_parcelado": 6499.02,
+     "com_juros": true
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 5786.94,
+     "parcelas": 8,
+     "valor_parcela": 757.01,
+     "total_parcelado": 6056.08,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 494,90 (total R$ 4.949,00)"
   }
  ],
  "amazon@amazon": [
@@ -1856,11 +1961,38 @@
    "parcelas_sem_juros": 12,
    "valor_parcela": 49.99,
    "total_parcelado": 599.88
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
+   "preco_atual": 599.0,
+   "preco_original": 879.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 49.99,
+   "total_parcelado": 599.88
   }
  ],
  "amazon@buscape": [
   {
    "data": "2026-11-17T17:52-03:00",
+   "preco_atual": 539.1,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 539.1
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 899.0,
+     "parcelas": 8,
+     "valor_parcela": 112.37,
+     "total_parcelado": 898.96,
+     "com_juros": false
+    }
+   ]
+  },
+  {
+   "data": "2026-11-17T19:08-03:00",
    "preco_atual": 539.1,
    "loja_destaque": "Amazon",
    "comparador": [
