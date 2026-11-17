@@ -38,7 +38,8 @@ AJUDA = (
     "coisa que algo que você já acompanha em outra loja.\n"
     "• Ou escreva o nome ou o código do modelo (ex.: BRE66AK) e eu procuro no Buscapé "
     "para você escolher.\n"
-    "• /lista mostra o que você acompanha.\n\n"
+    "• /lista mostra o que você acompanha.\n"
+    "• /remover tira um produto ou uma loja da sua lista.\n\n"
     "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
     "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja.\n\n"
     "Não consigo ler: Mercado Livre (bloqueia o robô).\n"
@@ -190,6 +191,22 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
     )
 
 
+def ofertas_com_marca(produtos):
+    """Todas as ofertas, cada uma com seu código curto (para os botões de remover)."""
+    return [(marca(s.chave_oferta(p, o)), p, o) for p in produtos for o in p["ofertas"]]
+
+
+def iniciar_remocao(chat_id, produtos):
+    if not produtos:
+        responder(chat_id, "Sua lista está vazia. Não há o que remover.")
+        return
+    teclado = [[{"text": f"🗑 {curto(p['nome'], 26)} · {o['loja']}", "callback_data": f"r:{m}"}]
+               for m, p, o in ofertas_com_marca(produtos)]
+    teclado.append([{"text": "✖ Cancelar", "callback_data": "c"}])
+    responder(chat_id, "O que você quer remover? Cada botão é uma loja de um produto. "
+                       "Se for a única loja do produto, o produto sai da lista.", teclado)
+
+
 SAUDACOES = {"oi", "ola", "olá", "ajuda", "help", "menu", "bom dia", "boa tarde", "boa noite", "obrigada", "obrigado"}
 
 
@@ -233,6 +250,32 @@ def concluir(chat_id, msg_id, acao_bruta, texto_msg, produtos, historico, cb_id=
     if acao == "c":
         finalizar("Cancelado. Nada foi adicionado.")
         return False
+
+    if acao in ("r", "rc"):  # remover: primeiro pergunta, depois remove
+        alvo = next((x for x in ofertas_com_marca(produtos) if len(partes) == 2 and x[0] == partes[1]), None)
+        if not alvo:
+            finalizar("Não encontrei mais essa oferta na lista. Use /remover de novo se precisar.")
+            return False
+        _, prod, oferta = alvo
+        unica = len(prod["ofertas"]) == 1
+        if acao == "r":
+            pergunta = (f"Remover “{prod['nome']}” da lista? É a única loja ({oferta['loja']}), "
+                        "então o produto inteiro sai." if unica else
+                        f"Remover a loja {oferta['loja']} do produto “{prod['nome']}”? "
+                        "As outras lojas continuam.")
+            api("editMessageText", chat_id=chat_id, message_id=msg_id,
+                text=pergunta + "\nO histórico já coletado fica guardado.",
+                reply_markup={"inline_keyboard": [[{"text": "🗑 Sim, remover", "callback_data": f"rc:{partes[1]}"}],
+                                                  [{"text": "✖ Cancelar", "callback_data": "c"}]]})
+            return False
+        prod["ofertas"].remove(oferta)
+        if unica:
+            produtos.remove(prod)
+            finalizar(f"🗑 Removido: “{prod['nome']}”. Não acompanho mais esse produto.")
+        else:
+            finalizar(f"🗑 Removida a loja {oferta['loja']} de “{prod['nome']}”. "
+                      f"Continuo acompanhando em: {', '.join(o['loja'] for o in prod['ofertas'])}.")
+        return True
 
     if acao == "b":  # escolheu um resultado da busca: segue o mesmo caminho de um link
         itens = re.findall(r"^(\d+)\. (.+)\n.*\n\s+(https://\S+)$", texto_msg or "", re.M)
@@ -307,6 +350,8 @@ def tratar_mensagem(chat_id, texto, produtos, historico):
     links = re.findall(r"https?://\S+", texto)
     if texto.startswith("/lista"):
         listar(chat_id, produtos, historico)
+    elif texto.startswith("/remover"):
+        iniciar_remocao(chat_id, produtos)
     elif links:
         for link in links:
             iniciar_adicao(chat_id, link, produtos)
