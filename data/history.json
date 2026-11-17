@@ -770,5 +770,39 @@
    ],
    "parcelado_com_juros": "8x de R$ 218,54 (total R$ 1.748,32)"
   }
+ ],
+ "lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox@buscape": [
+  {
+   "data": "2026-11-16T23:18-03:00",
+   "preco_atual": 4701.55,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 4701.55,
+     "parcelas": 10,
+     "valor_parcela": 494.9,
+     "total_parcelado": 4949.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Loja Online LG",
+     "preco": 4844.05
+    },
+    {
+     "loja": "Amazon",
+     "preco": 5199.0
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 5524.15,
+     "parcelas": 6,
+     "valor_parcela": 1083.17,
+     "total_parcelado": 6499.02,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 494,90 (total R$ 4.949,00)"
+  }
  ]
 }
