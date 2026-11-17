@@ -1847,5 +1847,15 @@
    ],
    "parcelado_com_juros": "10x de R$ 494,90 (total R$ 4.949,00)"
   }
+ ],
+ "amazon@amazon": [
+  {
+   "data": "2026-11-17T17:50-03:00",
+   "preco_atual": 599.0,
+   "preco_original": 879.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 49.99,
+   "total_parcelado": 599.88
+  }
  ]
 }

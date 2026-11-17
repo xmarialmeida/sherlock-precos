@@ -59,6 +59,17 @@
           "url": "https://www.buscape.com.br/lavadora-roupas/lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox"
         }
       ]
+    },
+    {
+      "id": "amazon",
+      "nome": "Amazon",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Amazon",
+          "url": "https://www.amazon.com.br/dp/B081FKSGPP"
+        }
+      ]
     }
   ]
 }
