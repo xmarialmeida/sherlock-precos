@@ -471,6 +471,14 @@
    "valor_parcela": 427.8,
    "total_parcelado": 4278.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-19T15:07-03:00",
+   "preco_atual": 4278.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 427.8,
+   "total_parcelado": 4278.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -1004,6 +1012,15 @@
    "valor_parcela": 257.5,
    "total_parcelado": 2060.0,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
+   "preco_atual": 1929.45,
+   "preco_pix": 1929.45,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 253.87,
+   "total_parcelado": 2030.96,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -1292,6 +1309,11 @@
    "data": "2026-11-19T13:07-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
   }
  ],
  "geladeira-brastemp-bre66ak@magazine-luiza": [
@@ -1558,6 +1580,13 @@
   {
    "data": "2026-11-19T13:08-03:00",
    "erro": "preço não encontrado na página"
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
+   "preco_atual": 5299.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 441.62,
+   "total_parcelado": 5299.44
   }
  ],
  "geladeira-brastemp-bre66ak@buscape": [
@@ -1711,6 +1740,10 @@
   },
   {
    "data": "2026-11-19T13:07-03:00",
+   "preco_atual": 3999.01
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
    "preco_atual": 3999.01
   }
  ],
@@ -3091,6 +3124,46 @@
   },
   {
    "data": "2026-11-19T13:08-03:00",
+   "preco_atual": 1747.47,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1747.47,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1791.7,
+     "parcelas": 8,
+     "valor_parcela": 235.75,
+     "total_parcelado": 1886.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1799.0
+    },
+    {
+     "loja": "Amazon",
+     "preco": 1834.98
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1884.63,
+     "parcelas": 8,
+     "valor_parcela": 242.86,
+     "total_parcelado": 1942.88,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 187,90 (total R$ 1.879,00)"
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
    "preco_atual": 1747.47,
    "loja_destaque": "Magazine Luiza",
    "comparador": [
@@ -4519,6 +4592,45 @@
      "com_juros": true
     }
    ]
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
+   "preco_atual": 4844.05,
+   "loja_destaque": "Loja Online LG",
+   "comparador": [
+    {
+     "loja": "Loja Online LG",
+     "preco": 4844.05
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 5034.05,
+     "parcelas": 10,
+     "valor_parcela": 529.9,
+     "total_parcelado": 5299.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 5199.0
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 5524.15,
+     "parcelas": 6,
+     "valor_parcela": 1083.17,
+     "total_parcelado": 6499.02,
+     "com_juros": true
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 6281.5,
+     "parcelas": 8,
+     "valor_parcela": 812.9,
+     "total_parcelado": 6503.2,
+     "com_juros": true
+    }
+   ]
   }
  ],
  "amazon@amazon": [
@@ -4729,6 +4841,10 @@
    "parcelas_sem_juros": 12,
    "valor_parcela": 54.39,
    "total_parcelado": 652.68
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
+   "erro": "preço não encontrado na página"
   }
  ],
  "amazon@buscape": [
@@ -5196,6 +5312,24 @@
   },
   {
    "data": "2026-11-19T13:08-03:00",
+   "preco_atual": 899.0,
+   "loja_destaque": "Webcontinental",
+   "comparador": [
+    {
+     "loja": "Webcontinental",
+     "preco": 899.0,
+     "parcelas": 8,
+     "valor_parcela": 112.37,
+     "total_parcelado": 898.96,
+     "com_juros": false
+    }
+   ],
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 112.37,
+   "total_parcelado": 898.96
+  },
+  {
+   "data": "2026-11-19T15:08-03:00",
    "preco_atual": 899.0,
    "loja_destaque": "Webcontinental",
    "comparador": [
