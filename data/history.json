@@ -719,6 +719,14 @@
    "valor_parcela": 427.8,
    "total_parcelado": 4278.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-21T19:07-03:00",
+   "preco_atual": 4278.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 427.8,
+   "total_parcelado": 4278.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -1531,6 +1539,15 @@
    "valor_parcela": 253.87,
    "total_parcelado": 2030.96,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-21T19:07-03:00",
+   "preco_atual": 1929.45,
+   "preco_pix": 1929.45,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 253.87,
+   "total_parcelado": 2030.96,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -1972,6 +1989,11 @@
   },
   {
    "data": "2026-11-21T17:07-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-21T19:07-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
   }
@@ -2457,6 +2479,13 @@
    "parcelas_sem_juros": 12,
    "valor_parcela": 441.62,
    "total_parcelado": 5299.44
+  },
+  {
+   "data": "2026-11-21T19:08-03:00",
+   "preco_atual": 5299.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 441.62,
+   "total_parcelado": 5299.44
   }
  ],
  "geladeira-brastemp-bre66ak@buscape": [
@@ -2734,6 +2763,10 @@
   },
   {
    "data": "2026-11-21T17:07-03:00",
+   "preco_atual": 3999.01
+  },
+  {
+   "data": "2026-11-21T19:07-03:00",
    "preco_atual": 3999.01
   }
  ],
@@ -5389,6 +5422,46 @@
     }
    ],
    "parcelado_com_juros": "8x de R$ 223,96 (total R$ 1.791,68)"
+  },
+  {
+   "data": "2026-11-21T19:07-03:00",
+   "preco_atual": 1735.12,
+   "loja_destaque": "Webcontinental",
+   "comparador": [
+    {
+     "loja": "Webcontinental",
+     "preco": 1735.12,
+     "parcelas": 8,
+     "valor_parcela": 223.96,
+     "total_parcelado": 1791.68,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1747.47,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1779.0
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 1834.98
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 223,96 (total R$ 1.791,68)"
   }
  ],
  "lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox@buscape": [
@@ -7938,6 +8011,42 @@
     }
    ],
    "parcelado_com_juros": "10x de R$ 529,90 (total R$ 5.299,00)"
+  },
+  {
+   "data": "2026-11-21T19:08-03:00",
+   "preco_atual": 5034.05,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 5034.05,
+     "parcelas": 10,
+     "valor_parcela": 529.9,
+     "total_parcelado": 5299.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 5199.0
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 5524.15,
+     "parcelas": 6,
+     "valor_parcela": 1083.17,
+     "total_parcelado": 6499.02,
+     "com_juros": true
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 6281.5,
+     "parcelas": 8,
+     "valor_parcela": 812.9,
+     "total_parcelado": 6503.2,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 529,90 (total R$ 5.299,00)"
   }
  ],
  "amazon@amazon": [
@@ -8388,6 +8497,14 @@
    "parcelas_sem_juros": 12,
    "valor_parcela": 66.16,
    "total_parcelado": 793.92
+  },
+  {
+   "data": "2026-11-21T19:08-03:00",
+   "preco_atual": 727.84,
+   "preco_original": 879.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 60.69,
+   "total_parcelado": 728.28
   }
  ],
  "amazon@buscape": [
@@ -9432,6 +9549,25 @@
   },
   {
    "data": "2026-11-21T17:08-03:00",
+   "preco_atual": 699.0,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 699.0
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 899.0,
+     "parcelas": 8,
+     "valor_parcela": 112.37,
+     "total_parcelado": 898.96,
+     "com_juros": false
+    }
+   ]
+  },
+  {
+   "data": "2026-11-21T19:08-03:00",
    "preco_atual": 699.0,
    "loja_destaque": "Amazon",
    "comparador": [
