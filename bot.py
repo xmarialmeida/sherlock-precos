@@ -39,7 +39,8 @@ AJUDA = (
     "• Ou escreva o nome ou o código do modelo (ex.: BRE66AK) e eu procuro no Buscapé "
     "para você escolher.\n"
     "• /lista mostra o que você acompanha.\n"
-    "• /remover tira um produto ou uma loja da sua lista.\n\n"
+    "• /remover tira um produto ou uma loja da sua lista.\n"
+    "• /renomear muda o nome de um produto.\n\n"
     "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
     "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja.\n\n"
     "Não consigo ler: Mercado Livre (bloqueia o robô).\n"
@@ -207,6 +208,31 @@ def iniciar_remocao(chat_id, produtos):
                        "Se for a única loja do produto, o produto sai da lista.", teclado)
 
 
+def renomear(chat_id, argumentos, produtos):
+    """/renomear → mostra a lista numerada; /renomear 2 Novo nome → troca o nome do produto 2.
+    Devolve True se a lista mudou. Só o nome muda: o histórico continua ligado ao produto."""
+    m = re.match(r"(\d+)\s+(.+)", argumentos.strip(), re.S)
+    if not m:
+        if not produtos:
+            responder(chat_id, "Sua lista está vazia.")
+            return False
+        numerada = "\n".join(f"{i}. {p['nome']}" for i, p in enumerate(produtos, 1))
+        responder(chat_id, "Qual produto você quer renomear? Mande o comando com o número e o "
+                           "nome novo, por exemplo:\n/renomear 1 Geladeira Brastemp BRE66AK\n\n" + numerada)
+        return False
+    i, novo = int(m.group(1)), " ".join(m.group(2).split())[:120]
+    if not 1 <= i <= len(produtos):
+        responder(chat_id, f"Não existe o produto {i}. Mande /renomear para ver a lista numerada.")
+        return False
+    if len(novo) < 2:
+        responder(chat_id, "O nome novo ficou curto demais. Tente de novo.")
+        return False
+    antigo = produtos[i - 1]["nome"]
+    produtos[i - 1]["nome"] = novo
+    responder(chat_id, f"✏️ Renomeado:\n“{antigo}”\n→ “{novo}”\nO histórico de preços continua o mesmo.")
+    return True
+
+
 SAUDACOES = {"oi", "ola", "olá", "ajuda", "help", "menu", "bom dia", "boa tarde", "boa noite", "obrigada", "obrigado"}
 
 
@@ -347,11 +373,14 @@ def listar(chat_id, produtos, historico):
 
 
 def tratar_mensagem(chat_id, texto, produtos, historico):
+    """Trata uma mensagem de texto. Devolve True se a lista de produtos mudou."""
     links = re.findall(r"https?://\S+", texto)
     if texto.startswith("/lista"):
         listar(chat_id, produtos, historico)
     elif texto.startswith("/remover"):
         iniciar_remocao(chat_id, produtos)
+    elif texto.startswith("/renomear"):
+        return renomear(chat_id, texto[len("/renomear"):], produtos)
     elif links:
         for link in links:
             iniciar_adicao(chat_id, link, produtos)
@@ -382,7 +411,7 @@ def main():
             mudou = concluir(autorizado, at["msg_id"], at.get("acao", ""), at.get("texto", ""),
                              produtos, historico)
         else:
-            tratar_mensagem(autorizado, at.get("texto", "") or "", produtos, historico)
+            mudou = bool(tratar_mensagem(autorizado, at.get("texto", "") or "", produtos, historico))
     else:
         # Modo antigo: pergunta ao Telegram se há mensagens novas.
         estado = {"offset": 0}
@@ -402,7 +431,7 @@ def main():
                     mudou = concluir(autorizado, cb["message"]["message_id"], cb.get("data", ""),
                                      cb["message"].get("text", ""), produtos, historico, cb["id"]) or mudou
             elif msg and str(msg["chat"]["id"]) == autorizado:
-                tratar_mensagem(autorizado, msg.get("text", "") or "", produtos, historico)
+                mudou = bool(tratar_mensagem(autorizado, msg.get("text", "") or "", produtos, historico)) or mudou
         if atualizacoes:
             ARQ_ESTADO.parent.mkdir(exist_ok=True)
             ARQ_ESTADO.write_text(json.dumps(estado, ensure_ascii=False, indent=1), encoding="utf-8")
