@@ -30,7 +30,7 @@ ARQ_HISTORICO = RAIZ / "data" / "history.json"
 ARQ_USO_SERVICO = RAIZ / "data" / "uso_servico.json"  # quando cada oferta usou o serviço pago
 FUSO = timezone(timedelta(hours=-3))  # horário de Brasília
 
-PADROES = {"queda_minima_pct": 1.0, "variacao_suspeita_pct": 50.0, "intervalo_servico_horas": 8}
+PADROES = {"queda_minima_pct": 1.0, "variacao_suspeita_pct": 50.0, "intervalo_servico_horas": 12}
 
 # Controle do serviço de leitura (créditos limitados): a coleta liga/desliga por oferta.
 SERVICO = {"permitido": True, "usado": False}
