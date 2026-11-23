@@ -953,6 +953,15 @@
    "valor_parcela": 419.9,
    "total_parcelado": 4199.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
+   "preco_atual": 4073.03,
+   "preco_pix": 4073.03,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 419.9,
+   "total_parcelado": 4199.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -2026,6 +2035,15 @@
    "valor_parcela": 253.87,
    "total_parcelado": 2030.96,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
+   "preco_atual": 1929.45,
+   "preco_pix": 1929.45,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 253.87,
+   "total_parcelado": 2030.96,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -2612,6 +2630,11 @@
   },
   {
    "data": "2026-11-23T19:38-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
   }
@@ -3599,6 +3622,10 @@
   },
   {
    "data": "2026-11-23T19:38-03:00",
+   "preco_atual": 3998.07
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
    "preco_atual": 3998.07
   }
  ],
@@ -7412,6 +7439,45 @@
      "preco": 1834.98
     }
    ]
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
+   "preco_atual": 1729.0,
+   "loja_destaque": "Fast Shop",
+   "comparador": [
+    {
+     "loja": "Fast Shop",
+     "preco": 1729.0
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1735.12,
+     "parcelas": 8,
+     "valor_parcela": 223.96,
+     "total_parcelado": 1791.68,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1747.47,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 1834.98
+    }
+   ]
   }
  ],
  "lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox@buscape": [
@@ -10933,6 +10999,37 @@
     }
    ],
    "parcelado_com_juros": "10x de R$ 529,90 (total R$ 5.299,00)"
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
+   "preco_atual": 4946.32,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 4946.32
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 5034.05,
+     "parcelas": 10,
+     "valor_parcela": 529.9,
+     "total_parcelado": 5299.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 5524.15,
+     "parcelas": 6,
+     "valor_parcela": 1083.17,
+     "total_parcelado": 6499.02,
+     "com_juros": true
+    },
+    {
+     "loja": "Loja Online LG",
+     "preco": 5699.05
+    }
+   ]
   }
  ],
  "amazon@amazon": [
@@ -12942,6 +13039,11 @@
   },
   {
    "data": "2026-11-23T19:38-03:00",
+   "preco_atual": 499.0,
+   "preco_pix": 499.0
+  },
+  {
+   "data": "2026-11-23T20:07-03:00",
    "preco_atual": 499.0,
    "preco_pix": 499.0
   }
