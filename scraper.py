@@ -27,9 +27,14 @@ from bs4 import BeautifulSoup
 RAIZ = Path(__file__).parent
 ARQ_PRODUTOS = RAIZ / "products.json"
 ARQ_HISTORICO = RAIZ / "data" / "history.json"
+ARQ_USO_SERVICO = RAIZ / "data" / "uso_servico.json"  # quando cada oferta usou o serviço pago
 FUSO = timezone(timedelta(hours=-3))  # horário de Brasília
 
-PADROES = {"queda_minima_pct": 1.0, "variacao_suspeita_pct": 50.0}
+PADROES = {"queda_minima_pct": 1.0, "variacao_suspeita_pct": 50.0, "intervalo_servico_horas": 8}
+
+# Controle do serviço de leitura (créditos limitados): a coleta liga/desliga por oferta.
+SERVICO = {"permitido": True, "usado": False}
+PAUSA_SERVICO = "aguardando: economia de créditos do serviço de leitura"
 TOLERANCIA_CONFIRMACAO_PCT = 5.0  # leitura seguinte "perto" da suspeita = confirmada
 
 HEADERS = {
@@ -419,6 +424,8 @@ def baixar_via_servico(url):
     chave = os.environ.get("SCRAPERAPI_KEY")
     if not chave:
         return None, "sem chave do serviço"
+    if not SERVICO["permitido"]:
+        return None, PAUSA_SERVICO
     params = {"api_key": chave, "url": url}
     pais = os.environ.get("SCRAPERAPI_PAIS")  # opcional; planos pagos permitem "br"
     if pais:
@@ -429,7 +436,8 @@ def baixar_via_servico(url):
         # só o tipo do erro: a mensagem completa poderia conter a chave
         return None, f"serviço: {type(e).__name__}"
     if r.status_code == 200:
-        print("  (lido via serviço de leitura: 1+ crédito gasto)")
+        SERVICO["usado"] = True
+        print("  (lido via serviço de leitura: créditos gastos)")
         return r.text, None
     return None, f"serviço: HTTP {r.status_code}"
 
@@ -481,6 +489,8 @@ def baixar(url):
         html, erro_servico = baixar_via_servico(url)
         if html:
             return html, None
+        if erro_servico == PAUSA_SERVICO:
+            return None, PAUSA_SERVICO
         return None, f"{ultimo_erro}, e o serviço falhou ({erro_servico})"
     return None, ultimo_erro
 
@@ -493,7 +503,7 @@ def ler_pagina(url, loja):
     if erro:
         return None, {}, erro
     dados = extrator(html)
-    if not dados.get("preco_atual") and os.environ.get("SCRAPERAPI_KEY"):
+    if not dados.get("preco_atual") and os.environ.get("SCRAPERAPI_KEY") and SERVICO["permitido"]:
         url_final = baixar.url_final
         html2, erro2 = baixar_via_servico(url_final or url)
         if html2:
@@ -621,6 +631,9 @@ def main():
     if ARQ_HISTORICO.exists():
         historico = json.loads(ARQ_HISTORICO.read_text(encoding="utf-8"))
     migrar_historico(historico, produtos)
+    uso = json.loads(ARQ_USO_SERVICO.read_text(encoding="utf-8")) if ARQ_USO_SERVICO.exists() else {}
+    intervalo = timedelta(hours=float(cfg.get("intervalo_servico_horas", PADROES["intervalo_servico_horas"])))
+    agora = datetime.now(FUSO)
 
     primeira_vez = not historico
     pedir_resumo = os.environ.get("ENVIAR_RESUMO") == "1" or primeira_vez
@@ -637,7 +650,20 @@ def main():
             nome = f"{p['nome']} ({oferta['loja']})"
             ultimo_foi_erro = bool(hist) and bool(hist[-1].get("erro"))
 
+            # O serviço pago só pode ser usado por esta oferta se a última vez foi há mais de N horas.
+            ultimo_uso = uso.get(chave)
+            SERVICO["permitido"] = (not ultimo_uso
+                                    or agora - datetime.fromisoformat(ultimo_uso) >= intervalo)
+            SERVICO["usado"] = False
             reg = coletar(oferta, chave)
+            if SERVICO["usado"]:
+                uso[chave] = agora.isoformat(timespec="minutes")
+            if reg.get("erro") == PAUSA_SERVICO:
+                # loja que só abre pelo serviço: pula esta rodada sem registrar falha
+                print(f"[{chave}] pulada nesta coleta (economia de créditos)")
+                if hist and not hist[-1].get("erro"):
+                    linhas.append(linha_oferta(oferta, hist[-1]) + " (última leitura)")
+                continue
             anteriores = validos(hist)  # antes de qualquer reclassificação
             nova_susp, confirmada = classificar_leitura(hist, reg, limite_susp)
             hist.append(reg)
@@ -679,6 +705,7 @@ def main():
     ARQ_HISTORICO.write_text(
         json.dumps(historico, ensure_ascii=False, indent=1), encoding="utf-8"
     )
+    ARQ_USO_SERVICO.write_text(json.dumps(uso, ensure_ascii=False, indent=1), encoding="utf-8")
 
     if pedir_resumo:
         enviar_telegram("🛒 Rastreador de preços\n\n" + "\n\n".join(blocos))
