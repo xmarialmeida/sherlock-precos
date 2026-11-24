@@ -14898,5 +14898,39 @@
    "data": "2026-11-24T18:10-03:00",
    "erro": "preço não encontrado na página"
   }
+ ],
+ "lava-loucas-electrolux-10-servicos-inox-com-funcao-higieniza@buscape": [
+  {
+   "data": "2026-11-24T18:30-03:00",
+   "preco_atual": 3035.08,
+   "loja_destaque": "Americanas",
+   "comparador": [
+    {
+     "loja": "Americanas",
+     "preco": 3035.08,
+     "parcelas": 8,
+     "valor_parcela": 412.37,
+     "total_parcelado": 3298.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 3298.9999999999995
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 3299.0
+    },
+    {
+     "loja": "Electrolux",
+     "preco": 3299.0,
+     "parcelas": 21,
+     "valor_parcela": 157.09,
+     "total_parcelado": 3298.89,
+     "com_juros": false
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 412,37 (total R$ 3.298,96)"
+  }
  ]
 }
