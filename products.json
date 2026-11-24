@@ -74,6 +74,17 @@
           "url": "https://www.buscape.com.br/lava-loucas/lava-loucas-10-servicos-electrolux-ll10x-inox"
         }
       ]
+    },
+    {
+      "id": "fogao-de-embutir-electrolux-fe4bb-4-bocas-acendimento-automa",
+      "nome": "Fogão de Embutir Electrolux FE4BB 4 Bocas Acendimento Automático",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Buscapé",
+          "url": "https://www.buscape.com.br/fogao/fogao-de-embutir-electrolux-fe4bb-4-bocas-acendimento-automatico"
+        }
+      ]
     }
   ]
 }
