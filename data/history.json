@@ -13047,5 +13047,15 @@
    "preco_atual": 499.0,
    "preco_pix": 499.0
   }
+ ],
+ "lava-e-seca-smart-com-inteligencia-artificial-aidd-12kg-lg-v@amazon": [
+  {
+   "data": "2026-11-23T21:02-03:00",
+   "preco_atual": 4299.0,
+   "preco_original": 4999.0,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 358.25,
+   "total_parcelado": 4299.0
+  }
  ]
 }
