@@ -1173,6 +1173,14 @@
    "valor_parcela": 399.9,
    "total_parcelado": 3999.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
+   "preco_atual": 3999.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 399.9,
+   "total_parcelado": 3999.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -2471,6 +2479,15 @@
    "valor_parcela": 214.37,
    "total_parcelado": 1714.96,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
+   "preco_atual": 1629.25,
+   "preco_pix": 1629.25,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 214.37,
+   "total_parcelado": 1714.96,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -3182,6 +3199,11 @@
   },
   {
    "data": "2026-11-24T18:10-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
   }
@@ -4269,6 +4291,10 @@
   },
   {
    "data": "2026-11-24T18:10-03:00",
+   "preco_atual": 3998.07
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
    "preco_atual": 3998.07
   }
  ],
@@ -9021,6 +9047,45 @@
   },
   {
    "data": "2026-11-24T18:10-03:00",
+   "preco_atual": 1629.0,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 1629.0
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1729.0
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1735.12,
+     "parcelas": 8,
+     "valor_parcela": 223.96,
+     "total_parcelado": 1791.68,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1747.47,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    }
+   ]
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
    "preco_atual": 1629.0,
    "loja_destaque": "Amazon",
    "comparador": [
@@ -14745,6 +14810,11 @@
    "data": "2026-11-24T18:10-03:00",
    "preco_atual": 499.0,
    "preco_pix": 499.0
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
+   "preco_atual": 499.0,
+   "preco_pix": 499.0
   }
  ],
  "lava-e-seca-smart-com-inteligencia-artificial-aidd-12kg-lg-v@amazon": [
@@ -14902,6 +14972,38 @@
  "lava-loucas-electrolux-10-servicos-inox-com-funcao-higieniza@buscape": [
   {
    "data": "2026-11-24T18:30-03:00",
+   "preco_atual": 3035.08,
+   "loja_destaque": "Americanas",
+   "comparador": [
+    {
+     "loja": "Americanas",
+     "preco": 3035.08,
+     "parcelas": 8,
+     "valor_parcela": 412.37,
+     "total_parcelado": 3298.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 3298.9999999999995
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 3299.0
+    },
+    {
+     "loja": "Electrolux",
+     "preco": 3299.0,
+     "parcelas": 21,
+     "valor_parcela": 157.09,
+     "total_parcelado": 3298.89,
+     "com_juros": false
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 412,37 (total R$ 3.298,96)"
+  },
+  {
+   "data": "2026-11-24T19:08-03:00",
    "preco_atual": 3035.08,
    "loja_destaque": "Americanas",
    "comparador": [
