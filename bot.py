@@ -43,7 +43,8 @@ AJUDA = (
     "• /renomear muda o nome de um produto.\n\n"
     "Tento ler qualquer loja. Se a página não mostrar o preço de forma que o robô entenda, "
     "eu te aviso e mando um resumo do que vi, para eu aprender a ler aquela loja.\n\n"
-    "Não consigo ler: Mercado Livre (bloqueia o robô).\n"
+    "Não leio direto: Mercado Livre, Magazine Luiza, Casas Bahia e Carrefour (bloqueiam o robô). "
+    "Para elas, eu procuro o produto no Buscapé.\n"
     "Dica: um link de produto do Buscapé traz o preço de várias lojas de uma vez "
     "(inclusive Magalu, Americanas e outras que bloqueiam o robô)."
 )
@@ -97,15 +98,32 @@ def limpar_url(url):
     return urlunparse((p.scheme, p.netloc, p.path, "", urlencode(mantidos), ""))
 
 
+GENERICOS = re.compile(r"^(amazon(\.com)?(\.br)?|mercado (livre|libre)|magazine luiza|magalu|buscap[eé]|"
+                       r"fast ?shop|brastemp|casas bahia|carrefour|kabum!?|shopee|página|home|produto)$", re.I)
+
+
 def extrair_nome(html):
+    """Nome do produto na página. Evita nomes genéricos como 'Amazon.com.br'."""
     soup = BeautifulSoup(html, "html.parser")
-    meta = soup.find("meta", attrs={"property": "og:title"})
-    titulo = (meta.get("content") if meta and meta.get("content") else "") or (
-        soup.title.get_text() if soup.title else ""
-    )
-    titulo = re.split(r"\s+\|\s+", " ".join(titulo.split()))[0].strip()
-    titulo = re.sub(r"\s+(em Promoção|com menor preço)\s+é no Buscapé$", "", titulo, flags=re.I)
-    return (titulo or "Produto novo")[:120]
+    candidatos = []
+    for attrs in ({"property": "og:title"}, {"name": "title"}, {"name": "twitter:title"}):
+        meta = soup.find("meta", attrs=attrs)
+        if meta and meta.get("content"):
+            candidatos.append(meta["content"])
+    for seletor in ("#productTitle", "h1"):
+        tag = soup.select_one(seletor)
+        if tag:
+            candidatos.append(tag.get_text(" "))
+    if soup.title:
+        candidatos.append(soup.title.get_text())
+    for titulo in candidatos:
+        titulo = " ".join(titulo.split())
+        titulo = re.sub(r"^Amazon\.com\.br\s*:\s*", "", titulo, flags=re.I)  # "Amazon.com.br: Nome…"
+        titulo = re.split(r"\s+\|\s+|\s+:\s+", titulo)[0].strip()  # tira " | Loja" e " : Categoria"
+        titulo = re.sub(r"\s+(em Promoção|com menor preço)\s+é no Buscapé$", "", titulo, flags=re.I)
+        if len(titulo) >= 6 and not GENERICOS.match(titulo):
+            return titulo[:120]
+    return "Produto sem nome (use /renomear)"
 
 
 def curto(texto, n=42):
@@ -147,8 +165,14 @@ def iniciar_adicao(chat_id, url_bruta, produtos):
                            "da página dele (a que diz “Compare preços em N lojas”).")
         return
     if loja in s.LOJAS_NAO_LIDAS:
-        responder(chat_id, f"🚫 O {loja} bloqueia o robô, então não consigo acompanhar preços de lá. "
-                           "Para produtos dessa loja, a conferência precisa ser manual.")
+        codigo = s.codigo_do_modelo(url)
+        if codigo:
+            responder(chat_id, f"🚫 {loja} bloqueia o robô. Mas o Buscapé mostra o preço de lá e de outras "
+                               f"lojas: vou procurar o modelo {codigo} para você.")
+            buscar(chat_id, codigo)
+        else:
+            responder(chat_id, f"🚫 {loja} bloqueia o robô. Me mande o nome ou o código do modelo "
+                               "(ex.: BRE66AK) que eu procuro no Buscapé, que mostra o preço dessa loja.")
         return
     if url in todas_as_urls(produtos):
         responder(chat_id, "Esse link eu já acompanho. 👍")
