@@ -1061,6 +1061,15 @@
    "valor_parcela": 419.9,
    "total_parcelado": 4199.0,
    "preco_original": 6198.0
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
+   "preco_atual": 4073.03,
+   "preco_pix": 4073.03,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 419.9,
+   "total_parcelado": 4199.0,
+   "preco_original": 6198.0
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -2242,6 +2251,15 @@
    "valor_parcela": 253.87,
    "total_parcelado": 2030.96,
    "preco_original": 2971.0
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
+   "preco_atual": 1929.45,
+   "preco_pix": 1929.45,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 253.87,
+   "total_parcelado": 2030.96,
+   "preco_original": 2971.0
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -2888,6 +2906,11 @@
   },
   {
    "data": "2026-11-24T06:08-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0
   }
@@ -3924,6 +3947,10 @@
   {
    "data": "2026-11-24T06:08-03:00",
    "erro": "preço não encontrado na página"
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
+   "preco_atual": 3998.07
   }
  ],
  "fogao-brastemp-byo4ebr@buscape": [
@@ -8168,6 +8195,45 @@
   },
   {
    "data": "2026-11-24T06:08-03:00",
+   "preco_atual": 1729.0,
+   "loja_destaque": "Fast Shop",
+   "comparador": [
+    {
+     "loja": "Fast Shop",
+     "preco": 1729.0
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1735.12,
+     "parcelas": 8,
+     "valor_parcela": 223.96,
+     "total_parcelado": 1791.68,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1747.47,
+     "parcelas": 10,
+     "valor_parcela": 187.9,
+     "total_parcelado": 1879.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 1834.98
+    }
+   ]
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
    "preco_atual": 1729.0,
    "loja_destaque": "Fast Shop",
    "comparador": [
@@ -13827,6 +13893,11 @@
    "data": "2026-11-24T06:08-03:00",
    "preco_atual": 499.0,
    "preco_pix": 499.0
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
+   "preco_atual": 499.0,
+   "preco_pix": 499.0
   }
  ],
  "lava-e-seca-smart-com-inteligencia-artificial-aidd-12kg-lg-v@amazon": [
@@ -13884,6 +13955,10 @@
   },
   {
    "data": "2026-11-24T06:08-03:00",
+   "erro": "preço não encontrado na página"
+  },
+  {
+   "data": "2026-11-24T07:07-03:00",
    "erro": "preço não encontrado na página"
   }
  ]
