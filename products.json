@@ -100,6 +100,17 @@
           "url": "https://loja.electrolux.com.br/geladeira-electrolux-frost-free-inverter-492l-efficient-com-autosense-inverse-smartbivolt-inox-ib7st/p"
         }
       ]
+    },
+    {
+      "id": "lava-e-seca-samsung-11kg-eco-bubble-wd11a-wd11a4453bx-cor-in",
+      "nome": "Lava e Seca Samsung 11kg Eco Bubble WD11A WD11A4453BX cor Inox",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Buscapé",
+          "url": "https://www.buscape.com.br/lavadora-roupas/lava-e-seca-samsung-11kg-eco-bubble-wd11a-wd11a4453bx-inox"
+        }
+      ]
     }
   ]
 }

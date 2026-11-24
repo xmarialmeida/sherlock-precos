@@ -15259,5 +15259,40 @@
    "preco_atual": 4599.0,
    "via_servico": false
   }
+ ],
+ "lava-e-seca-samsung-11kg-eco-bubble-wd11a-wd11a4453bx-cor-in@buscape": [
+  {
+   "data": "2026-11-24T20:13-03:00",
+   "preco_atual": 3589.9,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 3589.9,
+     "parcelas": 10,
+     "valor_parcela": 398.88,
+     "total_parcelado": 3988.8,
+     "com_juros": true
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 3909.15,
+     "parcelas": 6,
+     "valor_parcela": 766.5,
+     "total_parcelado": 4599.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Americanas",
+     "preco": 3948.48,
+     "parcelas": 8,
+     "valor_parcela": 548.4,
+     "total_parcelado": 4387.2,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 398,88 (total R$ 3.988,80)",
+   "via_servico": false
+  }
  ]
 }
