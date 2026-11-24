@@ -14650,5 +14650,15 @@
    "valor_parcela": 358.25,
    "total_parcelado": 4299.0
   }
+ ],
+ "lava-loucas-electrolux-10-servicos-inox-com-funcao-higieniza@amazon": [
+  {
+   "data": "2026-11-24T17:03-03:00",
+   "preco_atual": 3299.0,
+   "preco_original": 4797.9,
+   "parcelas_sem_juros": 12,
+   "valor_parcela": 274.99,
+   "total_parcelado": 3299.88
+  }
  ]
 }
