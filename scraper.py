@@ -443,7 +443,23 @@ def baixar_via_servico(url):
 
 
 # Lojas que bloqueiam o robô e que decidimos não acompanhar (para não gastar créditos).
-LOJAS_NAO_LIDAS = {"Mercado Livre"}
+# Para elas, o bot procura o mesmo produto no Buscapé, que mostra os preços dessas lojas.
+LOJAS_NAO_LIDAS = {"Mercado Livre", "Magazine Luiza", "Casas Bahia", "Carrefour"}
+
+
+def codigo_do_modelo(url):
+    """Tenta achar o código do modelo no endereço (ex.: .../lava-e-seca-lg-cv5012pc4-.../p/123 → 'cv5012pc4')."""
+    partes = [p for p in urlparse(url).path.split("/") if p]
+    if not partes:
+        return None
+    nome = max(partes, key=lambda p: p.count("-"))  # o trecho com o nome do produto
+    if nome.count("-") < 3:
+        return None  # link curto (ex.: meli.la/abc): não traz o nome do produto
+    unidades = re.compile(r"^\d+(kg|g|l|lt|litros?|v|w|cm|mm|pol|gb|tb|btu|btus|hz|m)$")
+    candidatos = [t for t in re.split(r"[-_.]", nome.lower())
+                  if 5 <= len(t) <= 14 and re.search(r"[a-z]", t) and re.search(r"\d", t)
+                  and not unidades.match(t)]
+    return max(candidatos, key=len).upper() if candidatos else None
 
 ATALHOS = {"a.co", "amzn.to", "meli.la", "mercadolivre.com"}
 
@@ -503,6 +519,12 @@ def ler_pagina(url, loja):
     if erro:
         return None, {}, erro
     dados = extrator(html)
+    if dados.get("preco_atual"):
+        dados["via_servico"] = bool(SERVICO["usado"])  # lida direto ou só pelo serviço pago
+    if not dados.get("preco_atual") and os.environ.get("SCRAPERAPI_KEY") and not SERVICO["permitido"]:
+        # a loja mostrou uma página sem preço (tela anti-robô) e o serviço está em pausa:
+        # pula esta rodada em vez de registrar falha
+        return html, {}, PAUSA_SERVICO
     if not dados.get("preco_atual") and os.environ.get("SCRAPERAPI_KEY") and SERVICO["permitido"]:
         url_final = baixar.url_final
         html2, erro2 = baixar_via_servico(url_final or url)
@@ -510,6 +532,7 @@ def ler_pagina(url, loja):
             dados2 = extrator(html2)
             if dados2.get("preco_atual"):
                 baixar.url_final = url_final
+                dados2["via_servico"] = True
                 return html2, dados2, None
     return html, dados, None
 
@@ -649,6 +672,7 @@ def main():
             hist = historico.setdefault(chave, [])
             nome = f"{p['nome']} ({oferta['loja']})"
             ultimo_foi_erro = bool(hist) and bool(hist[-1].get("erro"))
+            penultimo_foi_erro = len(hist) >= 2 and bool(hist[-2].get("erro"))
 
             # O serviço pago só pode ser usado por esta oferta se a última vez foi há mais de N horas.
             ultimo_uso = uso.get(chave)
@@ -659,11 +683,16 @@ def main():
             if SERVICO["usado"]:
                 uso[chave] = agora.isoformat(timespec="minutes")
             if reg.get("erro") == PAUSA_SERVICO:
-                # loja que só abre pelo serviço: pula esta rodada sem registrar falha
-                print(f"[{chave}] pulada nesta coleta (economia de créditos)")
-                if hist and not hist[-1].get("erro"):
-                    linhas.append(linha_oferta(oferta, hist[-1]) + " (última leitura)")
-                continue
+                ultima_boa = next((r for r in reversed(hist) if not r.get("erro")), None)
+                # leituras antigas não têm a marca; nesse caso vale se a oferta já usou o serviço
+                depende = ultima_boa and ultima_boa.get("via_servico", chave in uso)
+                if depende:
+                    # loja que só abre pelo serviço: pula esta rodada sem registrar falha
+                    print(f"[{chave}] pulada nesta coleta (economia de créditos)")
+                    linhas.append(linha_oferta(oferta, ultima_boa) + " (última leitura)")
+                    continue
+                # loja que costuma abrir direto e falhou: conta como falha normal
+                reg["erro"] = "a página veio sem preço (serviço de leitura em pausa para economizar)"
             anteriores = validos(hist)  # antes de qualquer reclassificação
             nova_susp, confirmada = classificar_leitura(hist, reg, limite_susp)
             hist.append(reg)
@@ -671,12 +700,17 @@ def main():
 
             if reg.get("erro"):
                 print(f"[{chave}] erro: {reg['erro']}")
-                if not ultimo_foi_erro:
+                # Falhas isoladas são comuns (a loja oscila); só avisa na 2ª falha seguida,
+                # e uma vez só por sequência de falhas.
+                if ultimo_foi_erro and not penultimo_foi_erro:
                     avisos.append(
-                        f"⚠️ Não consegui ler o preço de {nome} ({reg['erro']}).\n{oferta['url']}"
+                        f"⚠️ Não consigo ler o preço de {nome} há 2 coletas seguidas ({reg['erro']}). "
+                        f"Sigo tentando e aviso quando voltar.\n{oferta['url']}"
                     )
                 continue
 
+            if ultimo_foi_erro and penultimo_foi_erro:
+                avisos.append(f"✅ Voltei a ler o preço de {nome}: {formatar(melhor_preco(reg))}.")
             print(f"[{chave}] {formatar(reg['preco_atual'])}"
                   + (" (suspeita)" if nova_susp else "")
                   + (" (confirmou a anterior)" if confirmada else ""))
