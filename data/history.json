@@ -17970,5 +17970,35 @@
    "parcelado_com_juros": "10x de R$ 379,90 (total R$ 3.799,00)",
    "via_servico": false
   }
+ ],
+ "lava-e-seca-lg-12-vc4-cv5012pc4a-cor-inox@buscape": [
+  {
+   "data": "2026-11-25T09:25-03:00",
+   "preco_atual": 4299.0,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 4299.0
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 4369.05,
+     "parcelas": 10,
+     "valor_parcela": 459.9,
+     "total_parcelado": 4599.0,
+     "com_juros": true
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 4674.15,
+     "parcelas": 6,
+     "valor_parcela": 916.5,
+     "total_parcelado": 5499.0,
+     "com_juros": true
+    }
+   ],
+   "via_servico": false
+  }
  ]
 }

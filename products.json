@@ -111,6 +111,17 @@
           "url": "https://www.buscape.com.br/lavadora-roupas/lava-e-seca-samsung-11kg-eco-bubble-wd11a-wd11a4453bx-inox"
         }
       ]
+    },
+    {
+      "id": "lava-e-seca-lg-12-vc4-cv5012pc4a-cor-inox",
+      "nome": "Lava e Seca LG 12 VC4 CV5012PC4A cor Inox",
+      "preco_alvo": null,
+      "ofertas": [
+        {
+          "loja": "Buscapé",
+          "url": "https://www.buscape.com.br/lavadora-roupas/lava-e-seca-lg-12kg-vc4-cv5012pc4a-cor-inox"
+        }
+      ]
     }
   ]
 }
