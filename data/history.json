@@ -1604,6 +1604,15 @@
    "total_parcelado": 4299.0,
    "preco_original": 6198.0,
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 4299.0,
+   "parcelas_sem_juros": 10,
+   "valor_parcela": 429.9,
+   "total_parcelado": 4299.0,
+   "preco_original": 6198.0,
+   "via_servico": false
   }
  ],
  "fogao-brastemp-byo4ebr@brastemp": [
@@ -3381,6 +3390,16 @@
    "total_parcelado": 1714.96,
    "preco_original": 2971.0,
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 1598.85,
+   "preco_pix": 1598.85,
+   "parcelas_sem_juros": 8,
+   "valor_parcela": 210.37,
+   "total_parcelado": 1682.96,
+   "preco_original": 2971.0,
+   "via_servico": false
   }
  ],
  "micro-ondas-brastemp-23l-inox-com-multi-preparos-bms23ar@brastemp": [
@@ -4378,6 +4397,12 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "preco_atual": 4299.0,
+   "preco_pix": 4299.0,
+   "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "preco_atual": 4299.0,
    "preco_pix": 4299.0,
    "via_servico": false
@@ -5704,6 +5729,11 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "preco_atual": 4094.1,
+   "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "preco_atual": 4094.1,
    "via_servico": false
   }
@@ -12413,6 +12443,46 @@
     }
    ],
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 1629.0,
+   "loja_destaque": "Amazon",
+   "comparador": [
+    {
+     "loja": "Amazon",
+     "preco": 1629.0
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1729.0
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 1735.12,
+     "parcelas": 8,
+     "valor_parcela": 223.96,
+     "total_parcelado": 1791.68,
+     "com_juros": true
+    },
+    {
+     "loja": "Americanas",
+     "preco": 1779.93,
+     "parcelas": 8,
+     "valor_parcela": 229.37,
+     "total_parcelado": 1834.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Magazine Luiza",
+     "preco": 1899.05,
+     "parcelas": 10,
+     "valor_parcela": 199.9,
+     "total_parcelado": 1999.0,
+     "com_juros": true
+    }
+   ],
+   "via_servico": false
   }
  ],
  "lava-e-seca-lg-14kg-vc4-cv5014pc4-cor-inox@buscape": [
@@ -18343,6 +18413,12 @@
    "data": "2026-11-26T15:07-03:00",
    "preco_atual": 530.85,
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 499.0,
+   "preco_pix": 499.0,
+   "via_servico": false
   }
  ],
  "lava-e-seca-smart-com-inteligencia-artificial-aidd-12kg-lg-v@amazon": [
@@ -18704,6 +18780,10 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "erro": "a página veio sem preço (serviço de leitura em pausa para economizar)"
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "erro": "a página veio sem preço (serviço de leitura em pausa para economizar)"
   }
  ],
@@ -20256,6 +20336,39 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "preco_atual": 3035.08,
+   "loja_destaque": "Americanas",
+   "comparador": [
+    {
+     "loja": "Americanas",
+     "preco": 3035.08,
+     "parcelas": 8,
+     "valor_parcela": 412.37,
+     "total_parcelado": 3298.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 3298.9999999999995
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 3299.0
+    },
+    {
+     "loja": "Electrolux",
+     "preco": 3299.0,
+     "parcelas": 21,
+     "valor_parcela": 157.09,
+     "total_parcelado": 3298.89,
+     "com_juros": false
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 412,37 (total R$ 3.298,96)",
+   "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "preco_atual": 3035.08,
    "loja_destaque": "Americanas",
    "comparador": [
@@ -22256,6 +22369,43 @@
    ],
    "parcelado_com_juros": "8x de R$ 249,87 (total R$ 1.998,96)",
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 1839.08,
+   "loja_destaque": "Americanas",
+   "comparador": [
+    {
+     "loja": "Americanas",
+     "preco": 1839.08,
+     "parcelas": 8,
+     "valor_parcela": 249.87,
+     "total_parcelado": 1998.96,
+     "com_juros": true
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 1999.0
+    },
+    {
+     "loja": "Electrolux",
+     "preco": 1999.0,
+     "parcelas": 14,
+     "valor_parcela": 142.78,
+     "total_parcelado": 1998.92,
+     "com_juros": false
+    },
+    {
+     "loja": "Webcontinental",
+     "preco": 2238.88,
+     "parcelas": 8,
+     "valor_parcela": 279.86,
+     "total_parcelado": 2238.88,
+     "com_juros": false
+    }
+   ],
+   "parcelado_com_juros": "8x de R$ 249,87 (total R$ 1.998,96)",
+   "via_servico": false
   }
  ],
  "fogao-de-embutir-electrolux-fe4bb-4-bocas-acendimento-automa@electrolux": [
@@ -22498,6 +22648,11 @@
    "data": "2026-11-26T15:07-03:00",
    "preco_atual": 1999.0,
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 1999.0,
+   "via_servico": false
   }
  ],
  "geladeira-electrolux-frost-free-inverter-492l-efficient-com-@electrolux": [
@@ -22738,6 +22893,11 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "preco_atual": 4599.0,
+   "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "preco_atual": 4599.0,
    "via_servico": false
   }
@@ -23913,6 +24073,27 @@
    ],
    "parcelado_com_juros": "10x de R$ 398,88 (total R$ 3.988,80)",
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 3589.9,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 3589.9,
+     "parcelas": 10,
+     "valor_parcela": 398.88,
+     "total_parcelado": 3988.8,
+     "com_juros": true
+    },
+    {
+     "loja": "Amazon",
+     "preco": 3689.1
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 398,88 (total R$ 3.988,80)",
+   "via_servico": false
   }
  ],
  "lava-e-seca-lg-12-vc4-cv5012pc4a-cor-inox@buscape": [
@@ -24861,6 +25042,35 @@
    ],
    "parcelado_com_juros": "10x de R$ 437,79 (total R$ 4.377,90)",
    "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
+   "preco_atual": 4159.0,
+   "loja_destaque": "Magazine Luiza",
+   "comparador": [
+    {
+     "loja": "Magazine Luiza",
+     "preco": 4159.0,
+     "parcelas": 10,
+     "valor_parcela": 437.79,
+     "total_parcelado": 4377.9,
+     "com_juros": true
+    },
+    {
+     "loja": "Fast Shop",
+     "preco": 4299.0
+    },
+    {
+     "loja": "Angeloni",
+     "preco": 4674.15,
+     "parcelas": 6,
+     "valor_parcela": 916.5,
+     "total_parcelado": 5499.0,
+     "com_juros": true
+    }
+   ],
+   "parcelado_com_juros": "10x de R$ 437,79 (total R$ 4.377,90)",
+   "via_servico": false
   }
  ],
  "lava-e-seca-lg-12-vc4-cv5012pc4a-cor-inox@angeloni": [
@@ -25016,6 +25226,11 @@
   },
   {
    "data": "2026-11-26T15:07-03:00",
+   "preco_atual": 3704.05,
+   "via_servico": false
+  },
+  {
+   "data": "2026-11-26T16:07-03:00",
    "preco_atual": 3704.05,
    "via_servico": false
   }
